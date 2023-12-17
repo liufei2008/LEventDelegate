@@ -66,9 +66,18 @@ void FLEventDelegateCustomization::CustomizeChildren(TSharedRef<IPropertyHandle>
 		return;
 	}
 	auto OutObject = NodeSet[0];
+	bIsInWorld = OutObject->GetWorld() != nullptr;
+	if (!bIsInWorld)
+	{
+		if (CanChangeParameterType)
+		{
+			AddNativeParameterTypeProperty(PropertyHandle, ChildBuilder);
+		}
+		return;
+	}
 	if (auto Component = Cast<UActorComponent>(OutObject))
 	{
-		if (Component->GetOwner()->BlueprintCreatedComponents.Contains(Component))
+		if (Component->GetOwner() && Component->GetOwner()->BlueprintCreatedComponents.Contains(Component))
 		{
 			auto TipText = LOCTEXT("NotSupportActorBlueprintComponent_Content", "(Not support ActorBlueprint's component)");
 			ChildBuilder.AddCustomRow(LOCTEXT("NotSupportActorBlueprintComponent_Row", "NotSupportActorBlueprintComponent"))
@@ -90,15 +99,6 @@ void FLEventDelegateCustomization::CustomizeChildren(TSharedRef<IPropertyHandle>
 			;
 			return;
 		}
-	}
-	bIsInWorld = OutObject->GetWorld() != nullptr;
-	if (!bIsInWorld)
-	{
-		if (CanChangeParameterType)
-		{
-			AddNativeParameterTypeProperty(PropertyHandle, ChildBuilder);
-		}
-		return;
 	}
 
 	// copy all EventDelegate I'm accessing right now

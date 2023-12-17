@@ -95,14 +95,14 @@ struct LEVENTDELEGATE_API FLEventDelegate_Double : public FLEventDelegate
 		MAKE_EVENTDELEGATE_PRESETPARAM(Double, double);
 };
 
-MAKE_EVENTDELEGATE_PRESETPARAM_DELEGATE(Int8, int8);
-DECLARE_DYNAMIC_DELEGATE_OneParam(FLEventDelegate_Int8_DynamicDelegate, int8, value);
-USTRUCT(BlueprintType)
-struct LEVENTDELEGATE_API FLEventDelegate_Int8 : public FLEventDelegate
-{
-	GENERATED_BODY()
-		MAKE_EVENTDELEGATE_PRESETPARAM(Int8, int8);
-};
+//MAKE_EVENTDELEGATE_PRESETPARAM_DELEGATE(Int8, int8);
+//DECLARE_DYNAMIC_DELEGATE_OneParam(FLEventDelegate_Int8_DynamicDelegate, int8, value);
+//USTRUCT(BlueprintType)
+//struct LEVENTDELEGATE_API FLEventDelegate_Int8 : public FLEventDelegate
+//{
+//	GENERATED_BODY()
+//		MAKE_EVENTDELEGATE_PRESETPARAM(Int8, int8);
+//};
 
 MAKE_EVENTDELEGATE_PRESETPARAM_DELEGATE(UInt8, uint8);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FLEventDelegate_UInt8_DynamicDelegate, uint8, value);
@@ -113,23 +113,23 @@ struct LEVENTDELEGATE_API FLEventDelegate_UInt8 : public FLEventDelegate
 		MAKE_EVENTDELEGATE_PRESETPARAM(UInt8, uint8);
 };
 
-MAKE_EVENTDELEGATE_PRESETPARAM_DELEGATE(Int16, int16);
-DECLARE_DYNAMIC_DELEGATE_OneParam(FLEventDelegate_Int16_DynamicDelegate, int16, value);
-USTRUCT(BlueprintType)
-struct LEVENTDELEGATE_API FLEventDelegate_Int16 : public FLEventDelegate
-{
-	GENERATED_BODY()
-		MAKE_EVENTDELEGATE_PRESETPARAM(Int16, int16);
-};
+//MAKE_EVENTDELEGATE_PRESETPARAM_DELEGATE(Int16, int16);
+//DECLARE_DYNAMIC_DELEGATE_OneParam(FLEventDelegate_Int16_DynamicDelegate, int16, value);
+//USTRUCT(BlueprintType)
+//struct LEVENTDELEGATE_API FLEventDelegate_Int16 : public FLEventDelegate
+//{
+//	GENERATED_BODY()
+//		MAKE_EVENTDELEGATE_PRESETPARAM(Int16, int16);
+//};
 
-MAKE_EVENTDELEGATE_PRESETPARAM_DELEGATE(UInt16, uint16);
-DECLARE_DYNAMIC_DELEGATE_OneParam(FLEventDelegate_UInt16_DynamicDelegate, uint16, value);
-USTRUCT(BlueprintType)
-struct LEVENTDELEGATE_API FLEventDelegate_UInt16 : public FLEventDelegate
-{
-	GENERATED_BODY()
-		MAKE_EVENTDELEGATE_PRESETPARAM(UInt16, uint16);
-};
+//MAKE_EVENTDELEGATE_PRESETPARAM_DELEGATE(UInt16, uint16);
+//DECLARE_DYNAMIC_DELEGATE_OneParam(FLEventDelegate_UInt16_DynamicDelegate, uint16, value);
+//USTRUCT(BlueprintType)
+//struct LEVENTDELEGATE_API FLEventDelegate_UInt16 : public FLEventDelegate
+//{
+//	GENERATED_BODY()
+//		MAKE_EVENTDELEGATE_PRESETPARAM(UInt16, uint16);
+//};
 
 MAKE_EVENTDELEGATE_PRESETPARAM_DELEGATE(Int32, int32);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FLEventDelegate_Int32_DynamicDelegate, int32, value);
@@ -140,14 +140,14 @@ struct LEVENTDELEGATE_API FLEventDelegate_Int32 : public FLEventDelegate
 		MAKE_EVENTDELEGATE_PRESETPARAM(Int32, int32);
 };
 
-MAKE_EVENTDELEGATE_PRESETPARAM_DELEGATE(UInt32, uint32);
-DECLARE_DYNAMIC_DELEGATE_OneParam(FLEventDelegate_UInt32_DynamicDelegate, uint32, value);
-USTRUCT(BlueprintType)
-struct LEVENTDELEGATE_API FLEventDelegate_UInt32 : public FLEventDelegate
-{
-	GENERATED_BODY()
-		MAKE_EVENTDELEGATE_PRESETPARAM(UInt32, uint32);
-};
+//MAKE_EVENTDELEGATE_PRESETPARAM_DELEGATE(UInt32, uint32);
+//DECLARE_DYNAMIC_DELEGATE_OneParam(FLEventDelegate_UInt32_DynamicDelegate, uint32, value);
+//USTRUCT(BlueprintType)
+//struct LEVENTDELEGATE_API FLEventDelegate_UInt32 : public FLEventDelegate
+//{
+//	GENERATED_BODY()
+//		MAKE_EVENTDELEGATE_PRESETPARAM(UInt32, uint32);
+//};
 
 MAKE_EVENTDELEGATE_PRESETPARAM_DELEGATE(Int64, int64);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FLEventDelegate_Int64_DynamicDelegate, int64, value);
@@ -158,14 +158,14 @@ struct LEVENTDELEGATE_API FLEventDelegate_Int64 : public FLEventDelegate
 		MAKE_EVENTDELEGATE_PRESETPARAM(Int64, int64);
 };
 
-MAKE_EVENTDELEGATE_PRESETPARAM_DELEGATE(UInt64, uint64);
-DECLARE_DYNAMIC_DELEGATE_OneParam(FLEventDelegate_UInt64_DynamicDelegate, uint64, value);
-USTRUCT(BlueprintType)
-struct LEVENTDELEGATE_API FLEventDelegate_UInt64 : public FLEventDelegate
-{
-	GENERATED_BODY()
-		MAKE_EVENTDELEGATE_PRESETPARAM(UInt64, uint64);
-};
+//MAKE_EVENTDELEGATE_PRESETPARAM_DELEGATE(UInt64, uint64);
+//DECLARE_DYNAMIC_DELEGATE_OneParam(FLEventDelegate_UInt64_DynamicDelegate, uint64, value);
+//USTRUCT(BlueprintType)
+//struct LEVENTDELEGATE_API FLEventDelegate_UInt64 : public FLEventDelegate
+//{
+//	GENERATED_BODY()
+//		MAKE_EVENTDELEGATE_PRESETPARAM(UInt64, uint64);
+//};
 
 MAKE_EVENTDELEGATE_PRESETPARAM_DELEGATE(Vector2, FVector2D);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FLEventDelegate_Vector2_DynamicDelegate, FVector2D, value);

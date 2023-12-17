@@ -21,7 +21,7 @@ enum class ELEventDelegateParameterType :uint8
 	UInt16		UMETA(Hidden),
 	Int32		UMETA(DisplayName = "Integer"),
 	UInt32		UMETA(Hidden),
-	Int64		UMETA(Hidden),
+	Int64		UMETA(DisplayName = "Integer64"),
 	UInt64		UMETA(Hidden),
 	Vector2		UMETA(DisplayName = "Vector2"),
 	Vector3		UMETA(DisplayName = "Vector3"),
@@ -146,7 +146,7 @@ private:
 };
 
 /**
- * event or callback that can edit inside ue4 editor
+ * event that can edit inside engine editor
  */
 USTRUCT(BlueprintType)
 struct LEVENTDELEGATE_API FLEventDelegate
