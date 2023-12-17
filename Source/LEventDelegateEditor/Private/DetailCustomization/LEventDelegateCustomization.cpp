@@ -24,7 +24,7 @@
 
 #define LOCTEXT_NAMESPACE "LEventDelegateCustomization"
 
-PRAGMA_DISABLE_OPTIMIZATION
+UE_DISABLE_OPTIMIZATION
 
 #define LEventActorSelfName "(ActorSelf)"
 
@@ -2148,7 +2148,7 @@ void FLEventDelegateCustomization::CreateColorPicker(bool bIsLinearColor, TShare
 		//PickerArgs.OnColorPickerCancelled = FOnColorPickerCancelled::CreateSP(this, &FColorStructCustomization::OnColorPickerCancelled);
 		//PickerArgs.OnInteractivePickBegin = FSimpleDelegate::CreateSP(this, &FColorStructCustomization::OnColorPickerInteractiveBegin);
 		//PickerArgs.OnInteractivePickEnd = FSimpleDelegate::CreateSP(this, &FColorStructCustomization::OnColorPickerInteractiveEnd);
-		PickerArgs.InitialColorOverride = InitialColor;
+		PickerArgs.InitialColor = InitialColor;
 		PickerArgs.ParentWidget = ColorPickerParentWidget;
 		PickerArgs.OptionalOwningDetailsView = ColorPickerParentWidget;
 		FWidgetPath ParentWidgetPath;
@@ -2161,5 +2161,5 @@ void FLEventDelegateCustomization::CreateColorPicker(bool bIsLinearColor, TShare
 	OpenColorPicker(PickerArgs);
 }
 
-PRAGMA_ENABLE_OPTIMIZATION
+UE_ENABLE_OPTIMIZATION
 #undef LOCTEXT_NAMESPACE
