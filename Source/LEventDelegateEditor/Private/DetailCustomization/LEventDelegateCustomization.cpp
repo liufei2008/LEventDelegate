@@ -10,7 +10,7 @@
 #include "IPropertyUtilities.h"
 #include "IPropertyTypeCustomization.h"
 #include "PropertyCustomizationHelpers.h"
-#include "Widget/LGUIVectorInputBox.h"
+#include "Widget/LEventDelegateVectorInputBox.h"
 #include "Widgets/Input/SRotatorInputBox.h"
 #include "Widgets/Colors/SColorBlock.h"
 #include "Widgets/Colors/SColorPicker.h"
@@ -19,7 +19,7 @@
 #include "STextPropertyEditableTextBox.h"
 #include "SEnumCombo.h"
 #include "Serialization/BufferArchive.h"
-#include "LGUIEditableTextPropertyHandle.h"
+#include "LEventDelegateEditableTextPropertyHandle.h"
 #include "Widgets/Input/NumericUnitTypeInterface.inl"
 
 #define LOCTEXT_NAMESPACE "LEventDelegateCustomization"
@@ -360,7 +360,7 @@ void FLEventDelegateCustomization::UpdateEventsLayout(TSharedRef<IPropertyHandle
 	auto EventListHandle = GetEventListHandle(PropertyHandle);
 
 	auto NativeParameterTypeHandle = PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegate, supportParameterType));
-	NativeParameterTypeHandle->SetOnPropertyValueChanged(FSimpleDelegate::CreateLambda([=] { PropertyUtilites->ForceRefresh(); }));
+	NativeParameterTypeHandle->SetOnPropertyValueChanged(OnEventArrayNumChangedDelegate);
 
 	SAssignNew(EventsVerticalLayout, SVerticalBox)
 	+ SVerticalBox::Slot()
@@ -1364,7 +1364,7 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 		case ELEventDelegateParameterType::Vector2:
 		{
 			ClearReferenceValue(InDataContainerHandle);
-			SetBufferLength(ParamBufferHandle, 8);
+			SetBufferLength(ParamBufferHandle, sizeof(FVector2D));
 			auto ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, Vector2Value));
 			SET_VALUE_ON_BUFFER(FVector2D);
 			return SNew(SHorizontalBox)
@@ -1373,7 +1373,7 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 				.FillWidth(1.0f)
 				.Padding(0.0f, 2.0f)
 				[
-					SNew(SLGUIVectorInputBox)
+					SNew(SLEventDelegateVectorInputBox)
 					.AllowSpin(false)
 					.bColorAxisLabels(true)
 					.EnableX(true)
@@ -1391,7 +1391,7 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 		case ELEventDelegateParameterType::Vector3:
 		{
 			ClearReferenceValue(InDataContainerHandle);
-			SetBufferLength(ParamBufferHandle, 12);
+			SetBufferLength(ParamBufferHandle, sizeof(FVector));
 			auto ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, Vector3Value));
 			SET_VALUE_ON_BUFFER(FVector);
 			return SNew(SHorizontalBox)
@@ -1400,7 +1400,7 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 				.FillWidth(1.0f)
 				.Padding(0.0f, 2.0f)
 				[
-					SNew(SLGUIVectorInputBox)
+					SNew(SLEventDelegateVectorInputBox)
 					.AllowSpin(false)
 					.bColorAxisLabels(true)
 					.EnableX(true)
@@ -1422,7 +1422,7 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 		case ELEventDelegateParameterType::Vector4:
 		{
 			ClearReferenceValue(InDataContainerHandle);
-			SetBufferLength(ParamBufferHandle, 16);
+			SetBufferLength(ParamBufferHandle, sizeof(FVector4));
 			auto ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, Vector4Value));
 			SET_VALUE_ON_BUFFER(FVector4);
 			return SNew(SHorizontalBox)
@@ -1431,7 +1431,7 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 				.FillWidth(1.0f)
 				.Padding(0.0f, 2.0f)
 				[
-					SNew(SLGUIVectorInputBox)
+					SNew(SLEventDelegateVectorInputBox)
 					.AllowSpin(false)
 					.bColorAxisLabels(true)
 					.EnableX(true)
@@ -1457,7 +1457,7 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 		case ELEventDelegateParameterType::Color:
 		{
 			ClearReferenceValue(InDataContainerHandle);
-			SetBufferLength(ParamBufferHandle, 4);
+			SetBufferLength(ParamBufferHandle, sizeof(FColor));
 			auto ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, ColorValue));
 			auto ParamBuffer = GetBuffer(ParamBufferHandle);
 			FMemoryReader Reader(ParamBuffer);
@@ -1495,7 +1495,7 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 		case ELEventDelegateParameterType::LinearColor:
 		{
 			ClearReferenceValue(InDataContainerHandle);
-			SetBufferLength(ParamBufferHandle, 16);
+			SetBufferLength(ParamBufferHandle, sizeof(FLinearColor));
 			auto ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, LinearColorValue));
 			SET_VALUE_ON_BUFFER(FLinearColor);
 			return SNew(SHorizontalBox)
@@ -1529,7 +1529,7 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 		case ELEventDelegateParameterType::Quaternion:
 		{
 			ClearReferenceValue(InDataContainerHandle);
-			SetBufferLength(ParamBufferHandle, 16);
+			SetBufferLength(ParamBufferHandle, sizeof(FQuat));
 			auto ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, QuatValue));
 			SET_VALUE_ON_BUFFER(FQuat);
 			return SNew(SHorizontalBox)
@@ -1538,7 +1538,7 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 				.FillWidth(1.0f)
 				.Padding(0.0f, 2.0f)
 				[
-					SNew(SLGUIVectorInputBox)
+					SNew(SLEventDelegateVectorInputBox)
 					.AllowSpin(false)
 					.bColorAxisLabels(true)
 					.EnableX(true)
@@ -1584,7 +1584,7 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 			auto ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, TextValue));
 			SET_VALUE_ON_BUFFER(FText);
 			ValueHandle->SetOnPropertyValueChanged(FSimpleDelegate::CreateSP(this, &FLEventDelegateCustomization::TextValueChange, ValueHandle, ParamBufferHandle));
-			TSharedRef<IEditableTextProperty> EditableTextProperty = MakeShareable(new FLGUIEditableTextPropertyHandle(ValueHandle.ToSharedRef(), PropertyUtilites));
+			TSharedRef<IEditableTextProperty> EditableTextProperty = MakeShareable(new FLEventDelegateEditableTextPropertyHandle(ValueHandle.ToSharedRef(), PropertyUtilites));
 			const bool bIsMultiLine = EditableTextProperty->IsMultiLineText();
 			return 
 				SNew(SHorizontalBox)
@@ -1639,10 +1639,10 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 			SetBufferLength(ParamBufferHandle, 12);
 			auto ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, RotatorValue));
 			SET_VALUE_ON_BUFFER(FRotator);
-			TSharedPtr<INumericTypeInterface<float>> TypeInterface;
+			TSharedPtr<INumericTypeInterface<double>> TypeInterface;
 			if (FUnitConversion::Settings().ShouldDisplayUnits())
 			{
-				TypeInterface = MakeShareable(new TNumericUnitTypeInterface<float>(EUnit::Degrees));
+				TypeInterface = MakeShareable(new TNumericUnitTypeInterface<double>(EUnit::Degrees));
 			}
 			return SNew(SHorizontalBox)
 				+ SHorizontalBox::Slot()
@@ -1650,7 +1650,7 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 				.FillWidth(1.0f)
 				.Padding(0.0f, 2.0f)
 				[
-					SNew(SRotatorInputBox)
+					SNew(SNumericRotatorInputBox<double>)
 					.AllowSpin(false)
 					.bColorAxisLabels(true)
 					.Roll(this, &FLEventDelegateCustomization::RotatorGetItemValue, 0, ValueHandle, ParamBufferHandle)
@@ -1835,7 +1835,7 @@ void FLEventDelegateCustomization::TextValueChange(TSharedPtr<IPropertyHandle> V
 {
 	SET_BUFFER_ON_VALUE(FText);
 }
-void FLEventDelegateCustomization::Vector2ItemValueChange(float NewValue, ETextCommit::Type CommitInfo, int AxisType, TSharedPtr<IPropertyHandle> ValueHandle, TSharedPtr<IPropertyHandle> BufferHandle)
+void FLEventDelegateCustomization::Vector2ItemValueChange(double NewValue, ETextCommit::Type CommitInfo, int AxisType, TSharedPtr<IPropertyHandle> ValueHandle, TSharedPtr<IPropertyHandle> BufferHandle)
 {
 	FVector2D Value;
 	ValueHandle->GetValue(Value);
@@ -1849,7 +1849,7 @@ void FLEventDelegateCustomization::Vector2ItemValueChange(float NewValue, ETextC
 	ToBinary << Value;
 	SetBufferValue(BufferHandle, ToBinary);
 }
-TOptional<float> FLEventDelegateCustomization::Vector2GetItemValue(int AxisType, TSharedPtr<IPropertyHandle> ValueHandle, TSharedPtr<IPropertyHandle> BufferHandle)const
+TOptional<double> FLEventDelegateCustomization::Vector2GetItemValue(int AxisType, TSharedPtr<IPropertyHandle> ValueHandle, TSharedPtr<IPropertyHandle> BufferHandle)const
 {
 	FVector2D Value;
 	ValueHandle->GetValue(Value);
@@ -1860,7 +1860,7 @@ TOptional<float> FLEventDelegateCustomization::Vector2GetItemValue(int AxisType,
 	case 1: return	Value.Y;
 	}
 }
-void FLEventDelegateCustomization::Vector3ItemValueChange(float NewValue, ETextCommit::Type CommitInfo, int AxisType, TSharedPtr<IPropertyHandle> ValueHandle, TSharedPtr<IPropertyHandle> BufferHandle)
+void FLEventDelegateCustomization::Vector3ItemValueChange(double NewValue, ETextCommit::Type CommitInfo, int AxisType, TSharedPtr<IPropertyHandle> ValueHandle, TSharedPtr<IPropertyHandle> BufferHandle)
 {
 	FVector Value;
 	ValueHandle->GetValue(Value);
@@ -1875,7 +1875,7 @@ void FLEventDelegateCustomization::Vector3ItemValueChange(float NewValue, ETextC
 	ToBinary << Value;
 	SetBufferValue(BufferHandle, ToBinary);
 }
-TOptional<float> FLEventDelegateCustomization::Vector3GetItemValue(int AxisType, TSharedPtr<IPropertyHandle> ValueHandle, TSharedPtr<IPropertyHandle> BufferHandle)const
+TOptional<double> FLEventDelegateCustomization::Vector3GetItemValue(int AxisType, TSharedPtr<IPropertyHandle> ValueHandle, TSharedPtr<IPropertyHandle> BufferHandle)const
 {
 	FVector Value;
 	ValueHandle->GetValue(Value);
@@ -1887,7 +1887,7 @@ TOptional<float> FLEventDelegateCustomization::Vector3GetItemValue(int AxisType,
 	case 2: return	Value.Z;
 	}
 }
-void FLEventDelegateCustomization::Vector4ItemValueChange(float NewValue, ETextCommit::Type CommitInfo, int AxisType, TSharedPtr<IPropertyHandle> ValueHandle, TSharedPtr<IPropertyHandle> BufferHandle)
+void FLEventDelegateCustomization::Vector4ItemValueChange(double NewValue, ETextCommit::Type CommitInfo, int AxisType, TSharedPtr<IPropertyHandle> ValueHandle, TSharedPtr<IPropertyHandle> BufferHandle)
 {
 	FVector4 Value;
 	ValueHandle->GetValue(Value);
@@ -1903,7 +1903,7 @@ void FLEventDelegateCustomization::Vector4ItemValueChange(float NewValue, ETextC
 	ToBinary << Value;
 	SetBufferValue(BufferHandle, ToBinary);
 }
-TOptional<float> FLEventDelegateCustomization::Vector4GetItemValue(int AxisType, TSharedPtr<IPropertyHandle> ValueHandle, TSharedPtr<IPropertyHandle> BufferHandle)const
+TOptional<double> FLEventDelegateCustomization::Vector4GetItemValue(int AxisType, TSharedPtr<IPropertyHandle> ValueHandle, TSharedPtr<IPropertyHandle> BufferHandle)const
 {
 	FVector4 Value;
 	ValueHandle->GetValue(Value);
@@ -1966,7 +1966,7 @@ FReply FLEventDelegateCustomization::OnMouseButtonDownColorBlock(const FGeometry
 
 	return FReply::Handled();
 }
-TOptional<float> FLEventDelegateCustomization::RotatorGetItemValue(int AxisType, TSharedPtr<IPropertyHandle> ValueHandle, TSharedPtr<IPropertyHandle> BufferHandle)const
+TOptional<double> FLEventDelegateCustomization::RotatorGetItemValue(int AxisType, TSharedPtr<IPropertyHandle> ValueHandle, TSharedPtr<IPropertyHandle> BufferHandle)const
 {
 	FRotator Value;
 	ValueHandle->GetValue(Value);
@@ -1978,7 +1978,7 @@ TOptional<float> FLEventDelegateCustomization::RotatorGetItemValue(int AxisType,
 	case 2: return	Value.Yaw;
 	}
 }
-void FLEventDelegateCustomization::RotatorValueChange(float NewValue, ETextCommit::Type CommitInfo, int AxisType, TSharedPtr<IPropertyHandle> ValueHandle, TSharedPtr<IPropertyHandle> BufferHandle)
+void FLEventDelegateCustomization::RotatorValueChange(double NewValue, ETextCommit::Type CommitInfo, int AxisType, TSharedPtr<IPropertyHandle> ValueHandle, TSharedPtr<IPropertyHandle> BufferHandle)
 {
 	FRotator Value;
 	ValueHandle->GetValue(Value);

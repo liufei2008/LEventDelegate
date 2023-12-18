@@ -21,10 +21,13 @@ class SHorizontalBox;
 /**
  * Vector Slate control
  */
-class SLGUIVectorInputBox : public SCompoundWidget
+class SLEventDelegateVectorInputBox : public SCompoundWidget
 {
 public:
-	SLATE_BEGIN_ARGS(SLGUIVectorInputBox)
+	DECLARE_DELEGATE_OneParam(FOnDoubleValueChanged, double);
+	DECLARE_DELEGATE_TwoParams(FOnDoubleValueCommitted, double, ETextCommit::Type);
+
+	SLATE_BEGIN_ARGS(SLEventDelegateVectorInputBox)
 		: _Font( FCoreStyle::Get().GetFontStyle("NormalFont") )
 		, _AllowSpin(true)
 		, _SpinDelta(1)
@@ -35,10 +38,10 @@ public:
 		, _ShowW(false)
 		{}
 
-		SLATE_ATTRIBUTE( TOptional<float>, X )
-		SLATE_ATTRIBUTE( TOptional<float>, Y )
-		SLATE_ATTRIBUTE( TOptional<float>, Z )
-		SLATE_ATTRIBUTE( TOptional<float>, W )
+		SLATE_ATTRIBUTE( TOptional<double>, X )
+		SLATE_ATTRIBUTE( TOptional<double>, Y )
+		SLATE_ATTRIBUTE( TOptional<double>, Z )
+		SLATE_ATTRIBUTE( TOptional<double>, W )
 
 		/** Font to use for the text in this box */
 		SLATE_ATTRIBUTE( FSlateFontInfo, Font )
@@ -47,7 +50,7 @@ public:
 		SLATE_ARGUMENT(bool, AllowSpin)
 
 		/** The delta amount to apply, per pixel, when the spinner is dragged. */
-		SLATE_ATTRIBUTE( float, SpinDelta )
+		SLATE_ATTRIBUTE(double, SpinDelta )
 
 		/** Should the axis labels be colored */
 		SLATE_ARGUMENT( bool, bColorAxisLabels )	
@@ -62,15 +65,15 @@ public:
 		SLATE_ARGUMENT(bool, ShowZ)
 		SLATE_ARGUMENT(bool, ShowW)
 
-		SLATE_EVENT( FOnFloatValueChanged, OnXChanged )
-		SLATE_EVENT( FOnFloatValueChanged, OnYChanged )
-		SLATE_EVENT( FOnFloatValueChanged, OnZChanged )
-		SLATE_EVENT( FOnFloatValueChanged, OnWChanged )
+		SLATE_EVENT(FOnDoubleValueChanged, OnXChanged )
+		SLATE_EVENT(FOnDoubleValueChanged, OnYChanged )
+		SLATE_EVENT(FOnDoubleValueChanged, OnZChanged )
+		SLATE_EVENT(FOnDoubleValueChanged, OnWChanged )
 
-		SLATE_EVENT( FOnFloatValueCommitted, OnXCommitted )
-		SLATE_EVENT( FOnFloatValueCommitted, OnYCommitted )
-		SLATE_EVENT( FOnFloatValueCommitted, OnZCommitted )
-		SLATE_EVENT( FOnFloatValueCommitted, OnWCommitted )
+		SLATE_EVENT(FOnDoubleValueCommitted, OnXCommitted )
+		SLATE_EVENT(FOnDoubleValueCommitted, OnYCommitted )
+		SLATE_EVENT(FOnDoubleValueCommitted, OnZCommitted )
+		SLATE_EVENT(FOnDoubleValueCommitted, OnWCommitted )
 
 		/** Menu extender delegate for the X value */
 		SLATE_EVENT( FMenuExtensionDelegate, ContextMenuExtenderX )
@@ -88,10 +91,10 @@ public:
 		SLATE_EVENT( FSimpleDelegate, OnBeginSliderMovement )
 		
 		/** Called right after the slider handle is released by the user for any of the vector components */
-		SLATE_EVENT( FOnFloatValueChanged, OnEndSliderMovement )
+		SLATE_EVENT( FOnDoubleValueChanged, OnEndSliderMovement )
 
 		/** Provide custom type functionality for the vector */
-		SLATE_ARGUMENT( TSharedPtr< INumericTypeInterface<float> >, TypeInterface )
+		SLATE_ARGUMENT( TSharedPtr< INumericTypeInterface<double> >, TypeInterface )
 
 	SLATE_END_ARGS()
 
