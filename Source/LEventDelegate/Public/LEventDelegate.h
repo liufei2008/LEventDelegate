@@ -6,7 +6,7 @@
 #include "LEventDelegate.generated.h"
 
 
-UENUM(BlueprintType)
+UENUM(BlueprintType, Category=LGUI)
 enum class ELEventDelegateParameterType :uint8
 {
 	/** not initialized */
@@ -16,7 +16,7 @@ enum class ELEventDelegateParameterType :uint8
 	Float,
 	Double,
 	Int8		UMETA(Hidden),
-	UInt8		UMETA(DisplayName = "UInt8\Enum\Byte"),
+	UInt8		UMETA(DisplayName = "UInt8/Enum/Byte"),
 	Int16		UMETA(Hidden),
 	UInt16		UMETA(Hidden),
 	Int32		UMETA(DisplayName = "Integer"),
@@ -35,7 +35,7 @@ enum class ELEventDelegateParameterType :uint8
 	/** for actor reference in level */
 	Actor,
 	/** for LGUIPointerEventData */
-	PointerEvent_DEPRECATED,
+	PointerEvent_DEPRECATED		UMETA(Hidden),
 	/** Class for UClass reference */
 	Class,
 	
@@ -44,9 +44,7 @@ enum class ELEventDelegateParameterType :uint8
 	Name,
 	Text,
 };
-#ifndef LEventDelegateParameterType
-#define LEventDelegateParameterType UE_DEPRECATED_MACRO(5.0, "LEventDelegateParameterType has been renamed to ELEventDelegateParameterType") ELEventDelegateParameterType
-#endif
+
 /** helper class for finding function */
 class LEVENTDELEGATE_API ULEventDelegateParameterHelper
 {
@@ -148,7 +146,7 @@ private:
 /**
  * event that can edit inside engine editor
  */
-USTRUCT(BlueprintType)
+USTRUCT(BlueprintType, Category = LGUI)
 struct LEVENTDELEGATE_API FLEventDelegate
 {
 	GENERATED_BODY()

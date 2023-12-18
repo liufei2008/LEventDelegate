@@ -1,15 +1,15 @@
 // Copyright 2019-Present LexLiu. All Rights Reserved.
 
-#include "LGUIVectorInputBox.h"
+#include "LEventDelegateVectorInputBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Layout/SBorder.h"
 #include "HAL/IConsoleManager.h"
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
 
-#define LOCTEXT_NAMESPACE "SLGUIVectorInputBox"
+#define LOCTEXT_NAMESPACE "SLEventDelegateVectorInputBox"
 
-void SLGUIVectorInputBox::Construct( const FArguments& InArgs )
+void SLEventDelegateVectorInputBox::Construct( const FArguments& InArgs )
 {
 	TSharedRef<SHorizontalBox> HorizontalBox = SNew(SHorizontalBox);
 
@@ -24,20 +24,20 @@ void SLGUIVectorInputBox::Construct( const FArguments& InArgs )
 	if (InArgs._ShowW)ConstructW(InArgs, HorizontalBox);
 }
 
-void SLGUIVectorInputBox::ConstructX( const FArguments& InArgs, TSharedRef<SHorizontalBox> HorizontalBox )
+void SLEventDelegateVectorInputBox::ConstructX( const FArguments& InArgs, TSharedRef<SHorizontalBox> HorizontalBox )
 {	
 	TSharedRef<SWidget> LabelWidget = SNullWidget::NullWidget;
 	if (InArgs._bColorAxisLabels)
 	{
-		const FLinearColor LabelColor = SNumericEntryBox<float>::RedLabelBackgroundColor;
-		LabelWidget = SNumericEntryBox<float>::BuildNarrowColorLabel(LabelColor);
+		const FLinearColor LabelColor = SNumericEntryBox<double>::RedLabelBackgroundColor;
+		LabelWidget = SNumericEntryBox<double>::BuildNarrowColorLabel(LabelColor);
 	}
 
-	TAttribute<TOptional<float>> Value = InArgs._X;
+	TAttribute<TOptional<double>> Value = InArgs._X;
 
 	HorizontalBox->AddSlot()
 	[
-		SNew( SNumericEntryBox<float> )
+		SNew( SNumericEntryBox<double> )
 		.AllowSpin(InArgs._AllowSpin)
 		.Font( InArgs._Font )
 		.Value( InArgs._X )
@@ -62,16 +62,16 @@ void SLGUIVectorInputBox::ConstructX( const FArguments& InArgs, TSharedRef<SHori
 		.UndeterminedString(LOCTEXT("MultipleValues", "Multiple Values"))
 		.ContextMenuExtender(InArgs._ContextMenuExtenderX)
 		.TypeInterface(InArgs._TypeInterface)
-		.MinValue(TOptional<float>())
-		.MaxValue(TOptional<float>())
-		.MinSliderValue(TOptional<float>())
-		.MaxSliderValue(TOptional<float>())
+		.MinValue(TOptional<double>())
+		.MaxValue(TOptional<double>())
+		.MinSliderValue(TOptional<double>())
+		.MaxSliderValue(TOptional<double>())
 		.LinearDeltaSensitivity(1)
 		.Delta(InArgs._SpinDelta)
 		.OnBeginSliderMovement(InArgs._OnBeginSliderMovement)
 		.OnEndSliderMovement(InArgs._OnEndSliderMovement)
 		.LabelPadding(FMargin(3))
-		.LabelLocation(SNumericEntryBox<float>::ELabelLocation::Inside)
+		.LabelLocation(SNumericEntryBox<double>::ELabelLocation::Inside)
 		.Label()
 		[
 			LabelWidget
@@ -80,20 +80,20 @@ void SLGUIVectorInputBox::ConstructX( const FArguments& InArgs, TSharedRef<SHori
 	
 }
 
-void SLGUIVectorInputBox::ConstructY( const FArguments& InArgs, TSharedRef<SHorizontalBox> HorizontalBox )
+void SLEventDelegateVectorInputBox::ConstructY( const FArguments& InArgs, TSharedRef<SHorizontalBox> HorizontalBox )
 {
 	TSharedRef<SWidget> LabelWidget = SNullWidget::NullWidget;
 	if (InArgs._bColorAxisLabels)
 	{
-		const FLinearColor LabelColor = SNumericEntryBox<float>::GreenLabelBackgroundColor;
-		LabelWidget = SNumericEntryBox<float>::BuildNarrowColorLabel(LabelColor);
+		const FLinearColor LabelColor = SNumericEntryBox<double>::GreenLabelBackgroundColor;
+		LabelWidget = SNumericEntryBox<double>::BuildNarrowColorLabel(LabelColor);
 	}
 
-	TAttribute<TOptional<float>> Value = InArgs._Y;
+	TAttribute<TOptional<double>> Value = InArgs._Y;
 
 	HorizontalBox->AddSlot()
 	[
-		SNew( SNumericEntryBox<float> )
+		SNew( SNumericEntryBox<double> )
 		.AllowSpin(InArgs._AllowSpin)
 		.Font( InArgs._Font )
 		.Value( InArgs._Y )
@@ -118,16 +118,16 @@ void SLGUIVectorInputBox::ConstructY( const FArguments& InArgs, TSharedRef<SHori
 		.UndeterminedString(LOCTEXT("MultipleValues", "Multiple Values"))
 		.ContextMenuExtender(InArgs._ContextMenuExtenderY)
 		.TypeInterface(InArgs._TypeInterface)
-		.MinValue(TOptional<float>())
-		.MaxValue(TOptional<float>())
-		.MinSliderValue(TOptional<float>())
-		.MaxSliderValue(TOptional<float>())
+		.MinValue(TOptional<double>())
+		.MaxValue(TOptional<double>())
+		.MinSliderValue(TOptional<double>())
+		.MaxSliderValue(TOptional<double>())
 		.LinearDeltaSensitivity(1)
 		.Delta(InArgs._SpinDelta)
 		.OnBeginSliderMovement(InArgs._OnBeginSliderMovement)
 		.OnEndSliderMovement(InArgs._OnEndSliderMovement)
 		.LabelPadding(FMargin(3))
-		.LabelLocation(SNumericEntryBox<float>::ELabelLocation::Inside)
+		.LabelLocation(SNumericEntryBox<double>::ELabelLocation::Inside)
 		.Label()
 		[
 			LabelWidget
@@ -136,20 +136,20 @@ void SLGUIVectorInputBox::ConstructY( const FArguments& InArgs, TSharedRef<SHori
 
 }
 
-void SLGUIVectorInputBox::ConstructZ( const FArguments& InArgs, TSharedRef<SHorizontalBox> HorizontalBox )
+void SLEventDelegateVectorInputBox::ConstructZ( const FArguments& InArgs, TSharedRef<SHorizontalBox> HorizontalBox )
 {
 	TSharedRef<SWidget> LabelWidget = SNullWidget::NullWidget;
 	if (InArgs._bColorAxisLabels)
 	{
-		const FLinearColor LabelColor = SNumericEntryBox<float>::BlueLabelBackgroundColor;
-		LabelWidget = SNumericEntryBox<float>::BuildNarrowColorLabel(LabelColor);
+		const FLinearColor LabelColor = SNumericEntryBox<double>::BlueLabelBackgroundColor;
+		LabelWidget = SNumericEntryBox<double>::BuildNarrowColorLabel(LabelColor);
 	}
 
-	TAttribute<TOptional<float>> Value = InArgs._Z;
+	TAttribute<TOptional<double>> Value = InArgs._Z;
 
 	HorizontalBox->AddSlot()
 	[
-		SNew( SNumericEntryBox<float> )
+		SNew( SNumericEntryBox<double> )
 		.AllowSpin(InArgs._AllowSpin)
 		.Font( InArgs._Font )
 		.Value( InArgs._Z )
@@ -174,16 +174,16 @@ void SLGUIVectorInputBox::ConstructZ( const FArguments& InArgs, TSharedRef<SHori
 		.UndeterminedString(LOCTEXT("MultipleValues", "Multiple Values"))
 		.ContextMenuExtender(InArgs._ContextMenuExtenderZ)
 		.TypeInterface(InArgs._TypeInterface)
-		.MinValue(TOptional<float>())
-		.MaxValue(TOptional<float>())
-		.MinSliderValue(TOptional<float>())
-		.MaxSliderValue(TOptional<float>())
+		.MinValue(TOptional<double>())
+		.MaxValue(TOptional<double>())
+		.MinSliderValue(TOptional<double>())
+		.MaxSliderValue(TOptional<double>())
 		.LinearDeltaSensitivity(1)
 		.Delta(InArgs._SpinDelta)
 		.OnBeginSliderMovement(InArgs._OnBeginSliderMovement)
 		.OnEndSliderMovement(InArgs._OnEndSliderMovement)
 		.LabelPadding(FMargin(3))
-		.LabelLocation(SNumericEntryBox<float>::ELabelLocation::Inside)
+		.LabelLocation(SNumericEntryBox<double>::ELabelLocation::Inside)
 		.Label()
 		[
 			LabelWidget
@@ -191,20 +191,20 @@ void SLGUIVectorInputBox::ConstructZ( const FArguments& InArgs, TSharedRef<SHori
 	];
 }
 
-void SLGUIVectorInputBox::ConstructW(const FArguments& InArgs, TSharedRef<SHorizontalBox> HorizontalBox)
+void SLEventDelegateVectorInputBox::ConstructW(const FArguments& InArgs, TSharedRef<SHorizontalBox> HorizontalBox)
 {
 	TSharedRef<SWidget> LabelWidget = SNullWidget::NullWidget;
 	if (InArgs._bColorAxisLabels)
 	{
 		const FLinearColor LabelColor = FLinearColor::Yellow;
-		LabelWidget = SNumericEntryBox<float>::BuildNarrowColorLabel(LabelColor);
+		LabelWidget = SNumericEntryBox<double>::BuildNarrowColorLabel(LabelColor);
 	}
 
-	TAttribute<TOptional<float>> Value = InArgs._W;
+	TAttribute<TOptional<double>> Value = InArgs._W;
 
 	HorizontalBox->AddSlot()
 	[
-		SNew( SNumericEntryBox<float> )
+		SNew( SNumericEntryBox<double> )
 		.AllowSpin(InArgs._AllowSpin)
 		.Font( InArgs._Font )
 		.Value( InArgs._W )
@@ -229,16 +229,16 @@ void SLGUIVectorInputBox::ConstructW(const FArguments& InArgs, TSharedRef<SHoriz
 		.UndeterminedString(LOCTEXT("MultipleValues", "Multiple Values"))
 		.ContextMenuExtender(InArgs._ContextMenuExtenderW)
 		.TypeInterface(InArgs._TypeInterface)
-		.MinValue(TOptional<float>())
-		.MaxValue(TOptional<float>())
-		.MinSliderValue(TOptional<float>())
-		.MaxSliderValue(TOptional<float>())
+		.MinValue(TOptional<double>())
+		.MaxValue(TOptional<double>())
+		.MinSliderValue(TOptional<double>())
+		.MaxSliderValue(TOptional<double>())
 		.LinearDeltaSensitivity(1)
 		.Delta(InArgs._SpinDelta)
 		.OnBeginSliderMovement(InArgs._OnBeginSliderMovement)
 		.OnEndSliderMovement(InArgs._OnEndSliderMovement)
 		.LabelPadding(FMargin(3))
-		.LabelLocation(SNumericEntryBox<float>::ELabelLocation::Inside)
+		.LabelLocation(SNumericEntryBox<double>::ELabelLocation::Inside)
 		.Label()
 		[
 			LabelWidget
