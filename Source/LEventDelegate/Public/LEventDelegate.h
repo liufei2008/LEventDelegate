@@ -6,7 +6,7 @@
 #include "LEventDelegate.generated.h"
 
 
-UENUM(BlueprintType, Category=LGUI)
+UENUM(BlueprintType)
 enum class ELEventDelegateParameterType :uint8
 {
 	/** not initialized */
@@ -146,7 +146,7 @@ private:
 /**
  * event that can edit inside engine editor
  */
-USTRUCT(BlueprintType, Category = LGUI)
+USTRUCT(BlueprintType, Category = LEventDelegate)
 struct LEVENTDELEGATE_API FLEventDelegate
 {
 	GENERATED_BODY()
