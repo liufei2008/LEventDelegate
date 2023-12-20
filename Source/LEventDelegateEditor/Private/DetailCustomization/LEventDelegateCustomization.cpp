@@ -10,7 +10,6 @@
 #include "IPropertyUtilities.h"
 #include "IPropertyTypeCustomization.h"
 #include "PropertyCustomizationHelpers.h"
-#include "Widget/LEventDelegateVectorInputBox.h"
 #include "Widgets/Input/SRotatorInputBox.h"
 #include "Widgets/Colors/SColorBlock.h"
 #include "Widgets/Colors/SColorPicker.h"
@@ -21,6 +20,7 @@
 #include "Serialization/BufferArchive.h"
 #include "LEventDelegateEditableTextPropertyHandle.h"
 #include "Widgets/Input/NumericUnitTypeInterface.inl"
+#include "Widgets/Input/SVectorInputBox.h"
 
 #define LOCTEXT_NAMESPACE "LEventDelegateCustomization"
 
@@ -1367,23 +1367,22 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 			SetBufferLength(ParamBufferHandle, sizeof(FVector2D));
 			auto ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, Vector2Value));
 			SET_VALUE_ON_BUFFER(FVector2D);
+			using SNumericVector2DInputBox = SNumericVectorInputBox<double, FVector2D, 2>;
 			return SNew(SHorizontalBox)
 				+SHorizontalBox::Slot()
 				.VAlign(VAlign_Center)
 				.FillWidth(1.0f)
 				.Padding(0.0f, 2.0f)
 				[
-					SNew(SLEventDelegateVectorInputBox)
-					.AllowSpin(false)
+					SNew(SNumericVector2DInputBox)
+					.AllowSpin(true)
 					.bColorAxisLabels(true)
-					.EnableX(true)
-					.EnableY(true)
-					.ShowX(true)
-					.ShowY(true)
 					.X(this, &FLEventDelegateCustomization::Vector2GetItemValue, 0, ValueHandle, ParamBufferHandle)
 					.Y(this, &FLEventDelegateCustomization::Vector2GetItemValue, 1, ValueHandle, ParamBufferHandle)
 					.OnXCommitted(this, &FLEventDelegateCustomization::Vector2ItemValueChange, 0, ValueHandle, ParamBufferHandle)
 					.OnYCommitted(this, &FLEventDelegateCustomization::Vector2ItemValueChange, 1, ValueHandle, ParamBufferHandle)
+					.OnXChanged(this, &FLEventDelegateCustomization::Vector2ItemValueChange, ETextCommit::Default, 0, ValueHandle, ParamBufferHandle)
+					.OnYChanged(this, &FLEventDelegateCustomization::Vector2ItemValueChange, ETextCommit::Default, 1, ValueHandle, ParamBufferHandle)
 				]
 			;
 		}
@@ -1394,27 +1393,25 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 			SetBufferLength(ParamBufferHandle, sizeof(FVector));
 			auto ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, Vector3Value));
 			SET_VALUE_ON_BUFFER(FVector);
+			using SNumericVectorInputBox = SNumericVectorInputBox<double, FVector, 3>;
 			return SNew(SHorizontalBox)
 				+SHorizontalBox::Slot()
 				.VAlign(VAlign_Center)
 				.FillWidth(1.0f)
 				.Padding(0.0f, 2.0f)
 				[
-					SNew(SLEventDelegateVectorInputBox)
-					.AllowSpin(false)
+					SNew(SNumericVectorInputBox)
+					.AllowSpin(true)
 					.bColorAxisLabels(true)
-					.EnableX(true)
-					.EnableY(true)
-					.EnableZ(true)
-					.ShowX(true)
-					.ShowY(true)
-					.ShowZ(true)
 					.X(this, &FLEventDelegateCustomization::Vector3GetItemValue, 0, ValueHandle, ParamBufferHandle)
 					.Y(this, &FLEventDelegateCustomization::Vector3GetItemValue, 1, ValueHandle, ParamBufferHandle)
 					.Z(this, &FLEventDelegateCustomization::Vector3GetItemValue, 2, ValueHandle, ParamBufferHandle)
 					.OnXCommitted(this, &FLEventDelegateCustomization::Vector3ItemValueChange, 0, ValueHandle, ParamBufferHandle)
 					.OnYCommitted(this, &FLEventDelegateCustomization::Vector3ItemValueChange, 1, ValueHandle, ParamBufferHandle)
 					.OnZCommitted(this, &FLEventDelegateCustomization::Vector3ItemValueChange, 2, ValueHandle, ParamBufferHandle)
+					.OnXChanged(this, &FLEventDelegateCustomization::Vector2ItemValueChange, ETextCommit::Default, 0, ValueHandle, ParamBufferHandle)
+					.OnYChanged(this, &FLEventDelegateCustomization::Vector2ItemValueChange, ETextCommit::Default, 1, ValueHandle, ParamBufferHandle)
+					.OnZChanged(this, &FLEventDelegateCustomization::Vector2ItemValueChange, ETextCommit::Default, 2, ValueHandle, ParamBufferHandle)
 				]
 			;
 		}
@@ -1425,23 +1422,16 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 			SetBufferLength(ParamBufferHandle, sizeof(FVector4));
 			auto ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, Vector4Value));
 			SET_VALUE_ON_BUFFER(FVector4);
+			using SNumericVector4InputBox = SNumericVectorInputBox<double, FVector4, 4>;
 			return SNew(SHorizontalBox)
 				+SHorizontalBox::Slot()
 				.VAlign(VAlign_Center)
 				.FillWidth(1.0f)
 				.Padding(0.0f, 2.0f)
 				[
-					SNew(SLEventDelegateVectorInputBox)
-					.AllowSpin(false)
+					SNew(SNumericVector4InputBox)
+					.AllowSpin(true)
 					.bColorAxisLabels(true)
-					.EnableX(true)
-					.EnableY(true)
-					.EnableZ(true)
-					.EnableW(true)
-					.ShowX(true)
-					.ShowY(true)
-					.ShowZ(true)
-					.ShowW(true)
 					.X(this, &FLEventDelegateCustomization::Vector4GetItemValue, 0, ValueHandle, ParamBufferHandle)
 					.Y(this, &FLEventDelegateCustomization::Vector4GetItemValue, 1, ValueHandle, ParamBufferHandle)
 					.Z(this, &FLEventDelegateCustomization::Vector4GetItemValue, 2, ValueHandle, ParamBufferHandle)
@@ -1450,6 +1440,10 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 					.OnYCommitted(this, &FLEventDelegateCustomization::Vector4ItemValueChange, 1, ValueHandle, ParamBufferHandle)
 					.OnZCommitted(this, &FLEventDelegateCustomization::Vector4ItemValueChange, 2, ValueHandle, ParamBufferHandle)
 					.OnWCommitted(this, &FLEventDelegateCustomization::Vector4ItemValueChange, 3, ValueHandle, ParamBufferHandle)
+					.OnXChanged(this, &FLEventDelegateCustomization::Vector2ItemValueChange, ETextCommit::Default, 0, ValueHandle, ParamBufferHandle)
+					.OnYChanged(this, &FLEventDelegateCustomization::Vector2ItemValueChange, ETextCommit::Default, 1, ValueHandle, ParamBufferHandle)
+					.OnZChanged(this, &FLEventDelegateCustomization::Vector2ItemValueChange, ETextCommit::Default, 2, ValueHandle, ParamBufferHandle)
+					.OnWChanged(this, &FLEventDelegateCustomization::Vector2ItemValueChange, ETextCommit::Default, 3, ValueHandle, ParamBufferHandle)
 				]
 			;
 		}
@@ -1532,23 +1526,16 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 			SetBufferLength(ParamBufferHandle, sizeof(FQuat));
 			auto ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, QuatValue));
 			SET_VALUE_ON_BUFFER(FQuat);
+			using SNumericVector4InputBox = SNumericVectorInputBox<double, FVector4, 4>;
 			return SNew(SHorizontalBox)
 				+SHorizontalBox::Slot()
 				.VAlign(VAlign_Center)
 				.FillWidth(1.0f)
 				.Padding(0.0f, 2.0f)
 				[
-					SNew(SLEventDelegateVectorInputBox)
-					.AllowSpin(false)
+					SNew(SNumericVector4InputBox)
+					.AllowSpin(true)
 					.bColorAxisLabels(true)
-					.EnableX(true)
-					.EnableY(true)
-					.EnableZ(true)
-					.EnableW(true)
-					.ShowX(true)
-					.ShowY(true)
-					.ShowZ(true)
-					.ShowW(true)
 					.X(this, &FLEventDelegateCustomization::Vector4GetItemValue, 0, ValueHandle, ParamBufferHandle)
 					.Y(this, &FLEventDelegateCustomization::Vector4GetItemValue, 1, ValueHandle, ParamBufferHandle)
 					.Z(this, &FLEventDelegateCustomization::Vector4GetItemValue, 2, ValueHandle, ParamBufferHandle)
@@ -1557,6 +1544,10 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 					.OnYCommitted(this, &FLEventDelegateCustomization::Vector4ItemValueChange, 1, ValueHandle, ParamBufferHandle)
 					.OnZCommitted(this, &FLEventDelegateCustomization::Vector4ItemValueChange, 2, ValueHandle, ParamBufferHandle)
 					.OnWCommitted(this, &FLEventDelegateCustomization::Vector4ItemValueChange, 3, ValueHandle, ParamBufferHandle)
+					.OnXChanged(this, &FLEventDelegateCustomization::Vector4ItemValueChange, ETextCommit::Default, 0, ValueHandle, ParamBufferHandle)
+					.OnYChanged(this, &FLEventDelegateCustomization::Vector4ItemValueChange, ETextCommit::Default, 1, ValueHandle, ParamBufferHandle)
+					.OnZChanged(this, &FLEventDelegateCustomization::Vector4ItemValueChange, ETextCommit::Default, 2, ValueHandle, ParamBufferHandle)
+					.OnWChanged(this, &FLEventDelegateCustomization::Vector4ItemValueChange, ETextCommit::Default, 3, ValueHandle, ParamBufferHandle)
 				]
 			;
 		}
@@ -1636,7 +1627,7 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 		case ELEventDelegateParameterType::Rotator:
 		{
 			ClearReferenceValue(InDataContainerHandle);
-			SetBufferLength(ParamBufferHandle, 12);
+			SetBufferLength(ParamBufferHandle, 24);
 			auto ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, RotatorValue));
 			SET_VALUE_ON_BUFFER(FRotator);
 			TSharedPtr<INumericTypeInterface<double>> TypeInterface;
