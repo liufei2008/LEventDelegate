@@ -433,17 +433,8 @@ void FLEventDelegateData::Execute()
 		UE_LOG(LGUI, Error, TEXT("[%s].%d %s"), ANSI_TO_TCHAR(__FUNCTION__), __LINE__, *errMsg.ToString());
 		return;
 	}
-	if (CheckTargetObject())
-	{
-		if (CacheFunction != nullptr)
-		{
-			ExecuteTargetFunction(TargetObject, CacheFunction);
-		}
-		else
-		{
-			FindAndExecute(TargetObject);
-		}
-	}
+	
+	FindAndExecute(TargetObject);
 }
 void FLEventDelegateData::Execute(void* InParam, ELEventDelegateParameterType InParameterType)
 {
@@ -459,7 +450,7 @@ void FLEventDelegateData::Execute(void* InParam, ELEventDelegateParameterType In
 
 	if (UseNativeParameter)//should use native parameter (pass in param)
 	{
-		if (ParamType != InParameterType)//function's supported parameter is equal to event's parameter
+		if (ParamType != InParameterType)//function's supported parameter is not equal to event's parameter
 		{
 			if (InParameterType == ELEventDelegateParameterType::Double && ParamType == ELEventDelegateParameterType::Float)
 			{
@@ -493,31 +484,11 @@ void FLEventDelegateData::Execute(void* InParam, ELEventDelegateParameterType In
 				return;
 			}
 		}
-		if (CheckTargetObject())
-		{
-			if (CacheFunction != nullptr)
-			{
-				ExecuteTargetFunction(TargetObject, CacheFunction, InParam);
-			}
-			else
-			{
-				FindAndExecute(TargetObject, InParam);
-			}
-		}
+		FindAndExecute(TargetObject, InParam);
 	}
 	else
 	{
-		if (CheckTargetObject())
-		{
-			if (CacheFunction != nullptr)
-			{
-				ExecuteTargetFunction(TargetObject, CacheFunction);
-			}
-			else
-			{
-				FindAndExecute(TargetObject);
-			}
-		}
+		FindAndExecute(TargetObject);
 	}
 }
 
@@ -597,7 +568,19 @@ bool FLEventDelegateData::CheckTargetObject()
 }
 void FLEventDelegateData::FindAndExecute(UObject* Target, void* ParamData)
 {
-	CacheFunction = Target->FindFunction(functionName);
+	if (!CheckTargetObject())
+	{
+		auto errMsg = LOCTEXT("TargetObjectNotValid", "LEventDelegateData.FindAndExecute, Target object not valid!");
+#if WITH_EDITOR
+		LEventDelegateUtils::EditorNotification(errMsg, 10);
+#endif
+		UE_LOG(LGUI, Error, TEXT("[%s].%d %s"), ANSI_TO_TCHAR(__FUNCTION__), __LINE__, *errMsg.ToString());
+		return;
+	}
+	if (CacheFunction == nullptr)
+	{
+		CacheFunction = Target->FindFunction(functionName);
+	}
 	if (CacheFunction)
 	{
 		if (!ULEventDelegateParameterHelper::IsStillSupported(CacheFunction, ParamType))
@@ -613,11 +596,50 @@ void FLEventDelegateData::FindAndExecute(UObject* Target, void* ParamData)
 		{
 			if (ParamData == nullptr)
 			{
-				ExecuteTargetFunction(Target, CacheFunction);
+				switch (ParamType)
+				{
+				case ELEventDelegateParameterType::String:
+				{
+					FString TempString;
+					auto FromBinary = FMemoryReader(ParamBuffer, false);
+					FromBinary << TempString;
+					Target->ProcessEvent(CacheFunction, &TempString);
+				}
+				break;
+				case ELEventDelegateParameterType::Name:
+				{
+					FName TempName;
+					auto FromBinary = FMemoryReader(ParamBuffer, false);
+					FromBinary << TempName;
+					Target->ProcessEvent(CacheFunction, &TempName);
+				}
+				break;
+				case ELEventDelegateParameterType::Text:
+				{
+					FText TempText;
+					auto FromBinary = FMemoryReader(ParamBuffer, false);
+					FromBinary << TempText;
+					Target->ProcessEvent(CacheFunction, &TempText);
+				}
+				break;
+				case ELEventDelegateParameterType::Object:
+				case ELEventDelegateParameterType::Actor:
+				case ELEventDelegateParameterType::Class:
+				{
+					Target->ProcessEvent(CacheFunction, &ReferenceObject);
+				}
+				break;
+				default:
+				{
+					Target->ProcessEvent(CacheFunction, ParamBuffer.GetData());
+				}
+				break;
+				}
 			}
 			else
 			{
-				ExecuteTargetFunction(Target, CacheFunction, ParamData);
+				//execute function with passin parameter
+				Target->ProcessEvent(CacheFunction, ParamData);
 			}
 		}
 	}
@@ -629,52 +651,6 @@ void FLEventDelegateData::FindAndExecute(UObject* Target, void* ParamData)
 #endif
 		UE_LOG(LGUI, Error, TEXT("[%s].%d %s"), ANSI_TO_TCHAR(__FUNCTION__), __LINE__, *errMsg.ToString());
 	}
-}
-void FLEventDelegateData::ExecuteTargetFunction(UObject* Target, UFunction* Func)
-{
-	switch (ParamType)
-	{
-	case ELEventDelegateParameterType::String:
-	{
-		FString TempString;
-		auto FromBinary = FMemoryReader(ParamBuffer, false);
-		FromBinary << TempString;
-		Target->ProcessEvent(Func, &TempString);
-	}
-	break;
-	case ELEventDelegateParameterType::Name:
-	{
-		FName TempName;
-		auto FromBinary = FMemoryReader(ParamBuffer, false);
-		FromBinary << TempName;
-		Target->ProcessEvent(Func, &TempName);
-	}
-	break;
-	case ELEventDelegateParameterType::Text:
-	{
-		FText TempText;
-		auto FromBinary = FMemoryReader(ParamBuffer, false);
-		FromBinary << TempText;
-		Target->ProcessEvent(Func, &TempText);
-	}
-	break;
-	case ELEventDelegateParameterType::Object:
-	case ELEventDelegateParameterType::Actor:
-	case ELEventDelegateParameterType::Class:
-	{
-		Target->ProcessEvent(Func, &ReferenceObject);
-	}
-	break;
-	default:
-	{
-		Target->ProcessEvent(Func, ParamBuffer.GetData());
-	}
-	break;
-	}
-}
-void FLEventDelegateData::ExecuteTargetFunction(UObject* Target, UFunction* Func, void* ParamData)
-{
-	Target->ProcessEvent(Func, ParamData);
 }
 
 FLEventDelegate::FLEventDelegate()
