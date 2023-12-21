@@ -139,8 +139,6 @@ public:
 private:
 	bool CheckTargetObject();
 	void FindAndExecute(UObject* Target, void* ParamData = nullptr);
-	void ExecuteTargetFunction(UObject* Target, UFunction* Func);
-	void ExecuteTargetFunction(UObject* Target, UFunction* Func, void* ParamData);
 };
 
 /**
