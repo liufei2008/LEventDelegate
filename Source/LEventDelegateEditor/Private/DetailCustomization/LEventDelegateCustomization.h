@@ -2,6 +2,7 @@
 #include "CoreMinimal.h"
 #include "IPropertyTypeCustomization.h"
 #include "LEventDelegate.h"
+#include "PropertyHandle.h"
 #pragma once
 
 
