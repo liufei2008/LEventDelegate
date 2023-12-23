@@ -138,7 +138,7 @@ public:
 #endif
 private:
 	bool CheckTargetObject();
-	void FindAndExecute(UObject* Target, void* ParamData = nullptr);
+	void FindAndExecute(void* ParamData = nullptr);
 };
 
 /**
