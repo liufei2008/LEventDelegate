@@ -112,35 +112,40 @@ bool ULEventDelegateParameterHelper::IsPropertyCompatible(const FProperty* InFun
 	}
 	case NAME_StructProperty:
 	{
-		auto structProperty = (FStructProperty*)InFunctionProperty;
-		auto structName = structProperty->Struct->GetFName();
-		if (structName == NAME_Vector2D)
+		if (auto structProperty = CastField<FStructProperty>(InFunctionProperty))
 		{
-			OutParameterType = ELEventDelegateParameterType::Vector2; return true;
-		}
-		else if (structName == NAME_Vector)
-		{
-			OutParameterType = ELEventDelegateParameterType::Vector3; return true;
-		}
-		else if (structName == NAME_Vector4)
-		{
-			OutParameterType = ELEventDelegateParameterType::Vector4; return true;
-		}
-		else if (structName == NAME_Color)
-		{
-			OutParameterType = ELEventDelegateParameterType::Color; return true;
-		}
-		else if (structName == NAME_LinearColor)
-		{
-			OutParameterType = ELEventDelegateParameterType::LinearColor; return true;
-		}
-		else if (structName == NAME_Quat)
-		{
-			OutParameterType = ELEventDelegateParameterType::Quaternion; return true;
-		}
-		else if (structName == NAME_Rotator)
-		{
-			OutParameterType = ELEventDelegateParameterType::Rotator; return true;
+			if (structProperty->Struct != nullptr)
+			{
+				auto structName = structProperty->Struct->GetFName();
+				if (structName == NAME_Vector2D)
+				{
+					OutParameterType = ELEventDelegateParameterType::Vector2; return true;
+				}
+				else if (structName == NAME_Vector)
+				{
+					OutParameterType = ELEventDelegateParameterType::Vector3; return true;
+				}
+				else if (structName == NAME_Vector4)
+				{
+					OutParameterType = ELEventDelegateParameterType::Vector4; return true;
+				}
+				else if (structName == NAME_Color)
+				{
+					OutParameterType = ELEventDelegateParameterType::Color; return true;
+				}
+				else if (structName == NAME_LinearColor)
+				{
+					OutParameterType = ELEventDelegateParameterType::LinearColor; return true;
+				}
+				else if (structName == NAME_Quat)
+				{
+					OutParameterType = ELEventDelegateParameterType::Quaternion; return true;
+				}
+				else if (structName == NAME_Rotator)
+				{
+					OutParameterType = ELEventDelegateParameterType::Rotator; return true;
+				}
+			}
 		}
 		return false;
 	}
@@ -434,7 +439,7 @@ void FLEventDelegateData::Execute()
 		return;
 	}
 	
-	FindAndExecute(TargetObject);
+	FindAndExecute();
 }
 void FLEventDelegateData::Execute(void* InParam, ELEventDelegateParameterType InParameterType)
 {
@@ -484,11 +489,11 @@ void FLEventDelegateData::Execute(void* InParam, ELEventDelegateParameterType In
 				return;
 			}
 		}
-		FindAndExecute(TargetObject, InParam);
+		FindAndExecute(InParam);
 	}
 	else
 	{
-		FindAndExecute(TargetObject);
+		FindAndExecute();
 	}
 }
 
@@ -566,7 +571,7 @@ bool FLEventDelegateData::CheckTargetObject()
 		return IsValid(TargetObject);
 	}
 }
-void FLEventDelegateData::FindAndExecute(UObject* Target, void* ParamData)
+void FLEventDelegateData::FindAndExecute(void* ParamData)
 {
 	if (!CheckTargetObject())
 	{
@@ -579,7 +584,7 @@ void FLEventDelegateData::FindAndExecute(UObject* Target, void* ParamData)
 	}
 	if (CacheFunction == nullptr)
 	{
-		CacheFunction = Target->FindFunction(functionName);
+		CacheFunction = TargetObject->FindFunction(functionName);
 	}
 	if (CacheFunction)
 	{
@@ -603,7 +608,7 @@ void FLEventDelegateData::FindAndExecute(UObject* Target, void* ParamData)
 					FString TempString;
 					auto FromBinary = FMemoryReader(ParamBuffer, false);
 					FromBinary << TempString;
-					Target->ProcessEvent(CacheFunction, &TempString);
+					TargetObject->ProcessEvent(CacheFunction, &TempString);
 				}
 				break;
 				case ELEventDelegateParameterType::Name:
@@ -611,7 +616,7 @@ void FLEventDelegateData::FindAndExecute(UObject* Target, void* ParamData)
 					FName TempName;
 					auto FromBinary = FMemoryReader(ParamBuffer, false);
 					FromBinary << TempName;
-					Target->ProcessEvent(CacheFunction, &TempName);
+					TargetObject->ProcessEvent(CacheFunction, &TempName);
 				}
 				break;
 				case ELEventDelegateParameterType::Text:
@@ -619,19 +624,19 @@ void FLEventDelegateData::FindAndExecute(UObject* Target, void* ParamData)
 					FText TempText;
 					auto FromBinary = FMemoryReader(ParamBuffer, false);
 					FromBinary << TempText;
-					Target->ProcessEvent(CacheFunction, &TempText);
+					TargetObject->ProcessEvent(CacheFunction, &TempText);
 				}
 				break;
 				case ELEventDelegateParameterType::Object:
 				case ELEventDelegateParameterType::Actor:
 				case ELEventDelegateParameterType::Class:
 				{
-					Target->ProcessEvent(CacheFunction, &ReferenceObject);
+					TargetObject->ProcessEvent(CacheFunction, &ReferenceObject);
 				}
 				break;
 				default:
 				{
-					Target->ProcessEvent(CacheFunction, ParamBuffer.GetData());
+					TargetObject->ProcessEvent(CacheFunction, ParamBuffer.GetData());
 				}
 				break;
 				}
@@ -639,7 +644,7 @@ void FLEventDelegateData::FindAndExecute(UObject* Target, void* ParamData)
 			else
 			{
 				//execute function with passin parameter
-				Target->ProcessEvent(CacheFunction, ParamData);
+				TargetObject->ProcessEvent(CacheFunction, ParamData);
 			}
 		}
 	}
