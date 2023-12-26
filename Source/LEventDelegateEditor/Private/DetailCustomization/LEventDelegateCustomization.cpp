@@ -1409,9 +1409,9 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 					.OnXCommitted(this, &FLEventDelegateCustomization::Vector3ItemValueChange, 0, ValueHandle, ParamBufferHandle)
 					.OnYCommitted(this, &FLEventDelegateCustomization::Vector3ItemValueChange, 1, ValueHandle, ParamBufferHandle)
 					.OnZCommitted(this, &FLEventDelegateCustomization::Vector3ItemValueChange, 2, ValueHandle, ParamBufferHandle)
-					.OnXChanged(this, &FLEventDelegateCustomization::Vector2ItemValueChange, ETextCommit::Default, 0, ValueHandle, ParamBufferHandle)
-					.OnYChanged(this, &FLEventDelegateCustomization::Vector2ItemValueChange, ETextCommit::Default, 1, ValueHandle, ParamBufferHandle)
-					.OnZChanged(this, &FLEventDelegateCustomization::Vector2ItemValueChange, ETextCommit::Default, 2, ValueHandle, ParamBufferHandle)
+					.OnXChanged(this, &FLEventDelegateCustomization::Vector3ItemValueChange, ETextCommit::Default, 0, ValueHandle, ParamBufferHandle)
+					.OnYChanged(this, &FLEventDelegateCustomization::Vector3ItemValueChange, ETextCommit::Default, 1, ValueHandle, ParamBufferHandle)
+					.OnZChanged(this, &FLEventDelegateCustomization::Vector3ItemValueChange, ETextCommit::Default, 2, ValueHandle, ParamBufferHandle)
 				]
 			;
 		}
@@ -1440,10 +1440,10 @@ TSharedRef<SWidget> FLEventDelegateCustomization::DrawFunctionParameter(TSharedR
 					.OnYCommitted(this, &FLEventDelegateCustomization::Vector4ItemValueChange, 1, ValueHandle, ParamBufferHandle)
 					.OnZCommitted(this, &FLEventDelegateCustomization::Vector4ItemValueChange, 2, ValueHandle, ParamBufferHandle)
 					.OnWCommitted(this, &FLEventDelegateCustomization::Vector4ItemValueChange, 3, ValueHandle, ParamBufferHandle)
-					.OnXChanged(this, &FLEventDelegateCustomization::Vector2ItemValueChange, ETextCommit::Default, 0, ValueHandle, ParamBufferHandle)
-					.OnYChanged(this, &FLEventDelegateCustomization::Vector2ItemValueChange, ETextCommit::Default, 1, ValueHandle, ParamBufferHandle)
-					.OnZChanged(this, &FLEventDelegateCustomization::Vector2ItemValueChange, ETextCommit::Default, 2, ValueHandle, ParamBufferHandle)
-					.OnWChanged(this, &FLEventDelegateCustomization::Vector2ItemValueChange, ETextCommit::Default, 3, ValueHandle, ParamBufferHandle)
+					.OnXChanged(this, &FLEventDelegateCustomization::Vector4ItemValueChange, ETextCommit::Default, 0, ValueHandle, ParamBufferHandle)
+					.OnYChanged(this, &FLEventDelegateCustomization::Vector4ItemValueChange, ETextCommit::Default, 1, ValueHandle, ParamBufferHandle)
+					.OnZChanged(this, &FLEventDelegateCustomization::Vector4ItemValueChange, ETextCommit::Default, 2, ValueHandle, ParamBufferHandle)
+					.OnWChanged(this, &FLEventDelegateCustomization::Vector4ItemValueChange, ETextCommit::Default, 3, ValueHandle, ParamBufferHandle)
 				]
 			;
 		}
