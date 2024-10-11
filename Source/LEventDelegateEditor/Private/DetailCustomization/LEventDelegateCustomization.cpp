@@ -30,14 +30,15 @@ PRAGMA_DISABLE_OPTIMIZATION
 
 TArray<FString> FLEventDelegateCustomization::CopySourceData;
 
-TSharedPtr<IPropertyHandleArray> FLEventDelegateCustomization::GetEventListHandle(TSharedRef<IPropertyHandle> PropertyHandle)const
+TSharedPtr<IPropertyHandleArray> FLEventDelegateCustomization::GetEventListHandle()const
 {
 	return PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegate, eventList))->AsArray();
 }
 
-void FLEventDelegateCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> PropertyHandle, IDetailChildrenBuilder& ChildBuilder, IPropertyTypeCustomizationUtils& CustomizationUtils)
+void FLEventDelegateCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> InPropertyHandle, IDetailChildrenBuilder& ChildBuilder, IPropertyTypeCustomizationUtils& CustomizationUtils)
 {
 	PropertyUtilites = CustomizationUtils.GetPropertyUtilities();
+	PropertyHandle = InPropertyHandle;
 
 	//add parameter type property
 	bool bIsInWorld = false;
@@ -50,7 +51,7 @@ void FLEventDelegateCustomization::CustomizeChildren(TSharedRef<IPropertyHandle>
 		.NameContent()
 		[
 			SNew(STextBlock)
-			.Text(this, &FLEventDelegateCustomization::GetEventTitleName, PropertyHandle)
+			.Text(this, &FLEventDelegateCustomization::GetEventTitleName)
 			.ToolTipText(PropertyHandle->GetToolTipText())
 		]
 		.ValueContent()
@@ -71,7 +72,7 @@ void FLEventDelegateCustomization::CustomizeChildren(TSharedRef<IPropertyHandle>
 	{
 		if (CanChangeParameterType)
 		{
-			AddNativeParameterTypeProperty(PropertyHandle, ChildBuilder);
+			AddNativeParameterTypeProperty(ChildBuilder);
 		}
 		return;
 	}
@@ -81,22 +82,22 @@ void FLEventDelegateCustomization::CustomizeChildren(TSharedRef<IPropertyHandle>
 		{
 			auto TipText = LOCTEXT("NotSupportActorBlueprintComponent_Content", "(Not support ActorBlueprint's component)");
 			ChildBuilder.AddCustomRow(LOCTEXT("NotSupportActorBlueprintComponent_Row", "NotSupportActorBlueprintComponent"))
-			.NameContent()
-			[
-				SNew(STextBlock)
-				.Text(this, &FLEventDelegateCustomization::GetEventTitleName, PropertyHandle)
-				.ToolTipText(PropertyHandle->GetToolTipText())
-			]
-			.ValueContent()
-			[
-				SNew(STextBlock)
-				.Text(TipText)
-				.ToolTipText(TipText)
-				.Font(IDetailLayoutBuilder::GetDetailFont())
-				.ColorAndOpacity(FLinearColor(FColor::Red))
-				.AutoWrapText(true)
-			]
-			;
+				.NameContent()
+				[
+					SNew(STextBlock)
+					.Text(this, &FLEventDelegateCustomization::GetEventTitleName)
+					.ToolTipText(PropertyHandle->GetToolTipText())
+				]
+				.ValueContent()
+				[
+					SNew(STextBlock)
+					.Text(TipText)
+					.ToolTipText(TipText)
+					.Font(IDetailLayoutBuilder::GetDetailFont())
+					.ColorAndOpacity(FLinearColor(FColor::Red))
+					.AutoWrapText(true)
+				]
+				;
 			return;
 		}
 	}
@@ -118,16 +119,14 @@ void FLEventDelegateCustomization::CustomizeChildren(TSharedRef<IPropertyHandle>
 		}
 	}
 
-	auto EventListHandle = GetEventListHandle(PropertyHandle);
-	TWeakPtr<IPropertyUtilities> WeakUtilities = PropertyUtilites;
-	OnEventArrayNumChangedDelegate = FSimpleDelegate::CreateLambda([WeakUtilities]() {
-		if (WeakUtilities.IsValid())
-		{
-			WeakUtilities.Pin()->ForceRefresh();
-		}
-	});
-	EventListHandle->SetOnNumElementsChanged(OnEventArrayNumChangedDelegate);
-	UpdateEventsLayout(PropertyHandle);
+	auto EventListHandle = GetEventListHandle();
+	auto RefreshDelegate = FSimpleDelegate::CreateSP(this, &FLEventDelegateCustomization::UpdateEventsLayout);
+	EventListHandle->SetOnNumElementsChanged(RefreshDelegate);
+	auto NativeParameterTypeHandle = PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegate, supportParameterType));
+	NativeParameterTypeHandle->SetOnPropertyValueChanged(RefreshDelegate);
+
+	auto EventParameterType = GetNativeParameterType();
+	
 	ChildBuilder.AddCustomRow(LOCTEXT("EventDelegate", "EventDelegate"))
 		.WholeRowContent()
 		[
@@ -153,17 +152,81 @@ void FLEventDelegateCustomization::CustomizeChildren(TSharedRef<IPropertyHandle>
 				]
 				+ SOverlay::Slot()
 				[
-					EventsVerticalLayout.ToSharedRef()
+					SNew(SVerticalBox)
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNew(SBox)
+						.Padding(FMargin(8, 0))
+						.HeightOverride(30)
+						[
+							SNew(SHorizontalBox)
+							+SHorizontalBox::Slot()
+							.HAlign(EHorizontalAlignment::HAlign_Left)
+							.VAlign(EVerticalAlignment::VAlign_Center)
+							.AutoWidth()
+							[
+								SNew(STextBlock)
+								.Text(this, &FLEventDelegateCustomization::GetEventTitleName)
+								.ToolTipText(PropertyHandle->GetToolTipText())
+								//.Font(IDetailLayoutBuilder::GetDetailFont())
+							]
+							+SHorizontalBox::Slot()
+							.HAlign(EHorizontalAlignment::HAlign_Right)
+							[
+								IsParameterTypeValid(EventParameterType) ?
+								(
+									SNew(SHorizontalBox)
+									+ SHorizontalBox::Slot()
+									.AutoWidth()
+									.HAlign(HAlign_Left)
+									.VAlign(VAlign_Center)
+									.Padding(2, 0)
+									[
+										SNew(SHorizontalBox)
+										+ SHorizontalBox::Slot()
+										[
+											PropertyCustomizationHelpers::MakeAddButton(FSimpleDelegate::CreateSP(this, &FLEventDelegateCustomization::OnClickListAdd))
+										]
+										+ SHorizontalBox::Slot()
+										[
+											PropertyCustomizationHelpers::MakeEmptyButton(FSimpleDelegate::CreateSP(this, &FLEventDelegateCustomization::OnClickListEmpty))
+										]
+									]
+								)
+								:
+								(
+									SNew(SHorizontalBox)
+									+ SHorizontalBox::Slot()
+									.HAlign(HAlign_Left)
+									.VAlign(VAlign_Center)
+									.Padding(2, 0)
+									[
+										SNew(STextBlock)
+										.AutoWrapText(true)
+										.ColorAndOpacity(FSlateColor(FLinearColor::Red))
+										.Text(LOCTEXT("ParameterTypeWrong", "Parameter type is wrong!"))
+										.Font(IDetailLayoutBuilder::GetDetailFont())
+									]
+								)
+							]
+						]
+					]
+					+SVerticalBox::Slot()
+					[
+						SAssignNew(EventsWidget, SBox)
+					]
 				]
 			]
 		]
 	;
 
+	UpdateEventsLayout();
 }
 
-FText FLEventDelegateCustomization::GetEventTitleName(TSharedRef<IPropertyHandle> PropertyHandle)const
+FText FLEventDelegateCustomization::GetEventTitleName()const
 {
-	auto EventParameterType = GetNativeParameterType(PropertyHandle);
+	auto EventParameterType = GetNativeParameterType();
 	auto NameStr = PropertyHandle->GetPropertyDisplayName().ToString();
 	FString ParamTypeString = ULEventDelegateParameterHelper::ParameterTypeToName(EventParameterType, nullptr);
 	NameStr = NameStr + "(" + ParamTypeString + ")";
@@ -247,7 +310,7 @@ FText FLEventDelegateCustomization::GetComponentDisplayName(TSharedRef<IProperty
 	return FText::FromString(ComponentDisplayName);
 }
 
-EVisibility FLEventDelegateCustomization::GetNativeParameterWidgetVisibility(TSharedRef<IPropertyHandle> EventItemPropertyHandle, TSharedRef<IPropertyHandle> PropertyHandle)const
+EVisibility FLEventDelegateCustomization::GetNativeParameterWidgetVisibility(TSharedRef<IPropertyHandle> EventItemPropertyHandle)const
 {
 	auto TargetObject = GetEventItemTargetObject(EventItemPropertyHandle);
 	//function
@@ -257,7 +320,7 @@ EVisibility FLEventDelegateCustomization::GetNativeParameterWidgetVisibility(TSh
 	//parameterType
 	auto FunctionParameterType = GetEventDataParameterType(EventItemPropertyHandle);
 	UFunction* EventFunction = nullptr;
-	auto EventParameterType = GetNativeParameterType(PropertyHandle);
+	auto EventParameterType = GetNativeParameterType();
 
 	if (TargetObject)
 	{
@@ -278,7 +341,7 @@ EVisibility FLEventDelegateCustomization::GetNativeParameterWidgetVisibility(TSh
 	return EVisibility::Collapsed;
 }
 
-EVisibility FLEventDelegateCustomization::GetDrawFunctionParameterWidgetVisibility(TSharedRef<IPropertyHandle> EventItemPropertyHandle, TSharedRef<IPropertyHandle> PropertyHandle)const
+EVisibility FLEventDelegateCustomization::GetDrawFunctionParameterWidgetVisibility(TSharedRef<IPropertyHandle> EventItemPropertyHandle)const
 {
 	auto TargetObject = GetEventItemTargetObject(EventItemPropertyHandle);
 	//function
@@ -288,7 +351,7 @@ EVisibility FLEventDelegateCustomization::GetDrawFunctionParameterWidgetVisibili
 	//parameterType
 	auto FunctionParameterType = GetEventDataParameterType(EventItemPropertyHandle);
 	UFunction* EventFunction = nullptr;
-	auto EventParameterType = GetNativeParameterType(PropertyHandle);
+	auto EventParameterType = GetNativeParameterType();
 
 	if (TargetObject)
 	{
@@ -313,7 +376,7 @@ EVisibility FLEventDelegateCustomization::GetDrawFunctionParameterWidgetVisibili
 	return EVisibility::Collapsed;
 }
 
-EVisibility FLEventDelegateCustomization::GetNotValidParameterWidgetVisibility(TSharedRef<IPropertyHandle> EventItemPropertyHandle, TSharedRef<IPropertyHandle> PropertyHandle)const
+EVisibility FLEventDelegateCustomization::GetNotValidParameterWidgetVisibility(TSharedRef<IPropertyHandle> EventItemPropertyHandle)const
 {
 	auto TargetObject = GetEventItemTargetObject(EventItemPropertyHandle);
 	//function
@@ -323,7 +386,7 @@ EVisibility FLEventDelegateCustomization::GetNotValidParameterWidgetVisibility(T
 	//parameterType
 	auto FunctionParameterType = GetEventDataParameterType(EventItemPropertyHandle);
 	UFunction* EventFunction = nullptr;
-	auto EventParameterType = GetNativeParameterType(PropertyHandle);
+	auto EventParameterType = GetNativeParameterType();
 
 	if (TargetObject)
 	{
@@ -354,75 +417,12 @@ AActor* FLEventDelegateCustomization::GetEventItemHelperActor(TSharedRef<IProper
 	return HelperActor;
 }
 
-void FLEventDelegateCustomization::UpdateEventsLayout(TSharedRef<IPropertyHandle> PropertyHandle)
+void FLEventDelegateCustomization::UpdateEventsLayout()
 {
-	auto EventParameterType = GetNativeParameterType(PropertyHandle);
-	auto EventListHandle = GetEventListHandle(PropertyHandle);
+	auto EventParameterType = GetNativeParameterType();
+	auto EventListHandle = GetEventListHandle();
 
-	auto NativeParameterTypeHandle = PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegate, supportParameterType));
-	NativeParameterTypeHandle->SetOnPropertyValueChanged(OnEventArrayNumChangedDelegate);
-
-	SAssignNew(EventsVerticalLayout, SVerticalBox)
-	+ SVerticalBox::Slot()
-	.AutoHeight()
-	[
-		SNew(SBox)
-		.Padding(FMargin(8, 0))
-		.HeightOverride(30)
-		[
-			SNew(SHorizontalBox)
-			+SHorizontalBox::Slot()
-			.HAlign(EHorizontalAlignment::HAlign_Left)
-			.VAlign(EVerticalAlignment::VAlign_Center)
-			.AutoWidth()
-			[
-				SNew(STextBlock)
-				.Text(this, &FLEventDelegateCustomization::GetEventTitleName, PropertyHandle)
-				.ToolTipText(PropertyHandle->GetToolTipText())
-				//.Font(IDetailLayoutBuilder::GetDetailFont())
-			]
-			+SHorizontalBox::Slot()
-			.HAlign(EHorizontalAlignment::HAlign_Right)
-			[
-				IsParameterTypeValid(EventParameterType) ?
-				(
-					SNew(SHorizontalBox)
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
-					.HAlign(HAlign_Left)
-					.VAlign(VAlign_Center)
-					.Padding(2, 0)
-					[
-						SNew(SHorizontalBox)
-						+ SHorizontalBox::Slot()
-						[
-							PropertyCustomizationHelpers::MakeAddButton(FSimpleDelegate::CreateSP(this, &FLEventDelegateCustomization::OnClickListAdd, PropertyHandle))
-						]
-						+ SHorizontalBox::Slot()
-						[
-							PropertyCustomizationHelpers::MakeEmptyButton(FSimpleDelegate::CreateSP(this, &FLEventDelegateCustomization::OnClickListEmpty, PropertyHandle))
-						]
-					]
-				)
-				:
-				(
-					SNew(SHorizontalBox)
-					+ SHorizontalBox::Slot()
-					.HAlign(HAlign_Left)
-					.VAlign(VAlign_Center)
-					.Padding(2, 0)
-					[
-						SNew(STextBlock)
-						.AutoWrapText(true)
-						.ColorAndOpacity(FSlateColor(FLinearColor::Red))
-						.Text(LOCTEXT("ParameterTypeWrong", "Parameter type is wrong!"))
-						.Font(IDetailLayoutBuilder::GetDetailFont())
-					]
-				)
-			]
-		]
-	];
-
+	auto EventsVerticalLayout = SNew(SVerticalBox);
 	EventParameterWidgetArray.Empty(); 
 	uint32 arrayCount;
 	EventListHandle->GetNumElements(arrayCount);
@@ -593,7 +593,7 @@ void FLEventDelegateCustomization::UpdateEventsLayout(TSharedRef<IPropertyHandle
 							.HAlign(HAlign_Center)
 							.VAlign(VAlign_Center)
 							.Text(LOCTEXT("C", "C"))
-							.OnClicked(this, &FLEventDelegateCustomization::OnClickCopyPaste, true, EventItemIndex, PropertyHandle)
+							.OnClicked(this, &FLEventDelegateCustomization::OnClickCopyPaste, true, EventItemIndex)
 							.ToolTipText(LOCTEXT("Copy", "Copy this function"))
 						]
 					]
@@ -612,7 +612,7 @@ void FLEventDelegateCustomization::UpdateEventsLayout(TSharedRef<IPropertyHandle
 							.HAlign(HAlign_Center)
 							.VAlign(VAlign_Center)
 							.Text(LOCTEXT("P", "P"))
-							.OnClicked(this, &FLEventDelegateCustomization::OnClickCopyPaste, false, EventItemIndex, PropertyHandle)
+							.OnClicked(this, &FLEventDelegateCustomization::OnClickCopyPaste, false, EventItemIndex)
 							.ToolTipText(LOCTEXT("Paste", "Paste copied function to this function"))
 						]
 					]
@@ -631,7 +631,7 @@ void FLEventDelegateCustomization::UpdateEventsLayout(TSharedRef<IPropertyHandle
 							.HAlign(HAlign_Center)
 							.VAlign(VAlign_Center)
 							.Text(LOCTEXT("D", "D"))
-							.OnClicked(this, &FLEventDelegateCustomization::OnClickDuplicate, EventItemIndex, PropertyHandle)
+							.OnClicked(this, &FLEventDelegateCustomization::OnClickDuplicate, EventItemIndex)
 							.ToolTipText(LOCTEXT("Duplicate", "Duplicate this function"))
 						]
 					]
@@ -650,7 +650,7 @@ void FLEventDelegateCustomization::UpdateEventsLayout(TSharedRef<IPropertyHandle
 							.HAlign(HAlign_Center)
 							.VAlign(VAlign_Center)
 							.Text(LOCTEXT("+", "+"))
-							.OnClicked(this, &FLEventDelegateCustomization::OnClickAddRemove, true, EventItemIndex, (int32)arrayCount, PropertyHandle)
+							.OnClicked(this, &FLEventDelegateCustomization::OnClickAddRemove, true, EventItemIndex, (int32)arrayCount)
 							.ToolTipText(LOCTEXT("Add", "Add new one"))
 						]
 					]
@@ -669,7 +669,7 @@ void FLEventDelegateCustomization::UpdateEventsLayout(TSharedRef<IPropertyHandle
 							.HAlign(HAlign_Center)
 							.VAlign(VAlign_Center)
 							.Text(LOCTEXT("-", "-"))
-							.OnClicked(this, &FLEventDelegateCustomization::OnClickAddRemove, false, EventItemIndex, (int32)arrayCount, PropertyHandle)
+							.OnClicked(this, &FLEventDelegateCustomization::OnClickAddRemove, false, EventItemIndex, (int32)arrayCount)
 							.ToolTipText(LOCTEXT("Delete", "Delete this one"))
 						]
 					]
@@ -688,7 +688,7 @@ void FLEventDelegateCustomization::UpdateEventsLayout(TSharedRef<IPropertyHandle
 							.HAlign(HAlign_Center)
 							.VAlign(VAlign_Center)
 							.Text(LOCTEXT("▲", "▲"))
-							.OnClicked(this, &FLEventDelegateCustomization::OnClickMoveUpDown, true, EventItemIndex, PropertyHandle)
+							.OnClicked(this, &FLEventDelegateCustomization::OnClickMoveUpDown, true, EventItemIndex)
 							.ToolTipText(LOCTEXT("MoveUp", "Move up"))
 						]
 					]
@@ -707,7 +707,7 @@ void FLEventDelegateCustomization::UpdateEventsLayout(TSharedRef<IPropertyHandle
 							.HAlign(HAlign_Center)
 							.VAlign(VAlign_Center)
 							.Text(LOCTEXT("▼", "▼"))
-							.OnClicked(this, &FLEventDelegateCustomization::OnClickMoveUpDown, false, EventItemIndex, PropertyHandle)
+							.OnClicked(this, &FLEventDelegateCustomization::OnClickMoveUpDown, false, EventItemIndex)
 							.ToolTipText(LOCTEXT("MoveDown", "Move down"))
 						]
 					]
@@ -781,7 +781,7 @@ void FLEventDelegateCustomization::UpdateEventsLayout(TSharedRef<IPropertyHandle
 											]
 											.MenuContent()
 											[
-												MakeComponentSelectorMenu(EventItemIndex, PropertyHandle)
+												MakeComponentSelectorMenu(EventItemIndex)
 											]
 										]
 									]
@@ -815,7 +815,7 @@ void FLEventDelegateCustomization::UpdateEventsLayout(TSharedRef<IPropertyHandle
 												]
 												.MenuContent()
 												[
-													MakeFunctionSelectorMenu(EventItemIndex, PropertyHandle)
+													MakeFunctionSelectorMenu(EventItemIndex)
 												]
 											]
 										]
@@ -837,6 +837,7 @@ void FLEventDelegateCustomization::UpdateEventsLayout(TSharedRef<IPropertyHandle
 			]
 		;
 	}
+	EventsWidget->SetContent(EventsVerticalLayout);
 }
 
 void FLEventDelegateCustomization::OnActorParameterChange(TSharedRef<IPropertyHandle> ItemPropertyHandle)
@@ -910,7 +911,7 @@ void FLEventDelegateCustomization::OnActorParameterChange(TSharedRef<IPropertyHa
 		}
 	}
 
-	PropertyUtilites->ForceRefresh();
+	UpdateEventsLayout();
 }
 
 void FLEventDelegateCustomization::OnSelectComponent(UActorComponent* Comp, TSharedRef<IPropertyHandle> ItemPropertyHandle)
@@ -924,7 +925,7 @@ void FLEventDelegateCustomization::OnSelectComponent(UActorComponent* Comp, TSha
 	auto HelperComponentNameHandle = ItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, HelperComponentName));
 	HelperComponentNameHandle->SetValue(Comp->GetFName());
 
-	PropertyUtilites->ForceRefresh();
+	UpdateEventsLayout();
 }
 void FLEventDelegateCustomization::OnSelectActorSelf(TSharedRef<IPropertyHandle> ItemPropertyHandle)
 {
@@ -941,7 +942,7 @@ void FLEventDelegateCustomization::OnSelectActorSelf(TSharedRef<IPropertyHandle>
 	auto HelperComponentNameHandle = ItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, HelperComponentName));
 	HelperComponentNameHandle->SetValue(NAME_None);
 
-	PropertyUtilites->ForceRefresh();
+	UpdateEventsLayout();
 }
 void FLEventDelegateCustomization::OnSelectFunction(FName FuncName, ELEventDelegateParameterType ParamType, bool UseNativeParameter, TSharedRef<IPropertyHandle> ItemPropertyHandle)
 {
@@ -950,7 +951,8 @@ void FLEventDelegateCustomization::OnSelectFunction(FName FuncName, ELEventDeleg
 	SetEventDataParameterType(ItemPropertyHandle, ParamType);
 	auto UseNativeParameterHandle = ItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, UseNativeParameter));
 	UseNativeParameterHandle->SetValue(UseNativeParameter);
-	PropertyUtilites->ForceRefresh();
+
+	UpdateEventsLayout();
 }
 
 void FLEventDelegateCustomization::SetEventDataParameterType(TSharedRef<IPropertyHandle> EventDataItemHandle, ELEventDelegateParameterType ParameterType)
@@ -958,7 +960,7 @@ void FLEventDelegateCustomization::SetEventDataParameterType(TSharedRef<IPropert
 	auto ParamTypeHandle = EventDataItemHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, ParamType));
 	ParamTypeHandle->SetValue((uint8)ParameterType);
 }
-ELEventDelegateParameterType FLEventDelegateCustomization::GetNativeParameterType(TSharedRef<IPropertyHandle> PropertyHandle)const
+ELEventDelegateParameterType FLEventDelegateCustomization::GetNativeParameterType()const
 {
 	auto NativeParameterTypeHandle = PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegate, supportParameterType));
 	uint8 supportParameterTypeUint8;
@@ -966,7 +968,7 @@ ELEventDelegateParameterType FLEventDelegateCustomization::GetNativeParameterTyp
 	ELEventDelegateParameterType eventParameterType = (ELEventDelegateParameterType)supportParameterTypeUint8;
 	return eventParameterType;
 }
-void FLEventDelegateCustomization::AddNativeParameterTypeProperty(TSharedRef<IPropertyHandle> PropertyHandle, IDetailChildrenBuilder& ChildBuilder)
+void FLEventDelegateCustomization::AddNativeParameterTypeProperty(IDetailChildrenBuilder& ChildBuilder)
 {
 	auto NativeParameterTypeHandle = PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegate, supportParameterType));
 	ChildBuilder.AddProperty(NativeParameterTypeHandle.ToSharedRef());
@@ -980,9 +982,9 @@ ELEventDelegateParameterType FLEventDelegateCustomization::GetEventDataParameter
 	return functionParameterType;
 }
 
-TSharedRef<SWidget> FLEventDelegateCustomization::MakeComponentSelectorMenu(int32 itemIndex, TSharedRef<IPropertyHandle> PropertyHandle)
+TSharedRef<SWidget> FLEventDelegateCustomization::MakeComponentSelectorMenu(int32 itemIndex)
 {
-	auto EventListHandle = GetEventListHandle(PropertyHandle);
+	auto EventListHandle = GetEventListHandle();
 	auto ItemPropertyHandle = EventListHandle->GetElement(itemIndex);
 	auto HelperActorHandle = ItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, HelperActor));
 	UObject* HelperActorObject = nullptr;
@@ -1039,10 +1041,10 @@ TSharedRef<SWidget> FLEventDelegateCustomization::MakeComponentSelectorMenu(int3
 	}
 	return MenuBuilder.MakeWidget();
 }
-TSharedRef<SWidget> FLEventDelegateCustomization::MakeFunctionSelectorMenu(int32 itemIndex, TSharedRef<IPropertyHandle> PropertyHandle)
+TSharedRef<SWidget> FLEventDelegateCustomization::MakeFunctionSelectorMenu(int32 itemIndex)
 {
-	auto EventListHandle = GetEventListHandle(PropertyHandle);
-	auto EventParameterType = GetNativeParameterType(PropertyHandle);
+	auto EventListHandle = GetEventListHandle();
+	auto EventParameterType = GetNativeParameterType();
 	auto ItemPropertyHandle = EventListHandle->GetElement(itemIndex);
 	auto TargetObjectHandle = ItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, TargetObject));
 	UObject* TargetObject = nullptr;
@@ -1112,21 +1114,21 @@ bool FLEventDelegateCustomization::IsFunctionSelectorMenuEnabled(TSharedRef<IPro
 
 	return IsValid(HelperActorObject) && IsValid(TargetObject);
 }
-void FLEventDelegateCustomization::OnClickListAdd(TSharedRef<IPropertyHandle> PropertyHandle)
+void FLEventDelegateCustomization::OnClickListAdd()
 {
-	auto EventListHandle = GetEventListHandle(PropertyHandle);
+	auto EventListHandle = GetEventListHandle();
 	EventListHandle->AddItem();
-	PropertyUtilites->ForceRefresh();
+	UpdateEventsLayout();
 }
-void FLEventDelegateCustomization::OnClickListEmpty(TSharedRef<IPropertyHandle> PropertyHandle)
+void FLEventDelegateCustomization::OnClickListEmpty()
 {
-	auto EventListHandle = GetEventListHandle(PropertyHandle);
+	auto EventListHandle = GetEventListHandle();
 	EventListHandle->EmptyArray();
-	PropertyUtilites->ForceRefresh();
+	UpdateEventsLayout();
 }
-FReply FLEventDelegateCustomization::OnClickAddRemove(bool AddOrRemove, int32 Index, int32 Count, TSharedRef<IPropertyHandle> PropertyHandle)
+FReply FLEventDelegateCustomization::OnClickAddRemove(bool AddOrRemove, int32 Index, int32 Count)
 {
-	auto EventListHandle = GetEventListHandle(PropertyHandle);
+	auto EventListHandle = GetEventListHandle();
 	if (AddOrRemove)
 	{
 		if (Count == 0)
@@ -1146,12 +1148,12 @@ FReply FLEventDelegateCustomization::OnClickAddRemove(bool AddOrRemove, int32 In
 		if (Count != 0)
 			EventListHandle->DeleteItem(Index);
 	}
-	PropertyUtilites->ForceRefresh();
+	UpdateEventsLayout();
 	return FReply::Handled();
 }
-FReply FLEventDelegateCustomization::OnClickCopyPaste(bool CopyOrPaste, int32 Index, TSharedRef<IPropertyHandle> PropertyHandle)
+FReply FLEventDelegateCustomization::OnClickCopyPaste(bool CopyOrPaste, int32 Index)
 {
-	auto EventListHandle = GetEventListHandle(PropertyHandle);
+	auto EventListHandle = GetEventListHandle();
 	auto EventDataHandle = EventListHandle->GetElement(Index);
 	if (CopyOrPaste)
 	{
@@ -1161,21 +1163,21 @@ FReply FLEventDelegateCustomization::OnClickCopyPaste(bool CopyOrPaste, int32 In
 	else
 	{
 		EventDataHandle->SetPerObjectValues(CopySourceData);
-		PropertyUtilites->ForceRefresh();
+		UpdateEventsLayout();
 	}
 	return FReply::Handled();
 }
 
-FReply FLEventDelegateCustomization::OnClickDuplicate(int32 Index, TSharedRef<IPropertyHandle> PropertyHandle)
+FReply FLEventDelegateCustomization::OnClickDuplicate(int32 Index)
 {
-	auto EventListHandle = GetEventListHandle(PropertyHandle);
+	auto EventListHandle = GetEventListHandle();
 	auto EventDataHandle = EventListHandle->GetElement(Index);
 	EventListHandle->DuplicateItem(Index);
 	return FReply::Handled();
 }
-FReply FLEventDelegateCustomization::OnClickMoveUpDown(bool UpOrDown, int32 Index, TSharedRef<IPropertyHandle> PropertyHandle)
+FReply FLEventDelegateCustomization::OnClickMoveUpDown(bool UpOrDown, int32 Index)
 {
-	auto EventListHandle = GetEventListHandle(PropertyHandle);
+	auto EventListHandle = GetEventListHandle();
 	if (UpOrDown)
 	{
 		if (Index <= 0)
@@ -2077,22 +2079,22 @@ void FLEventDelegateCustomization::SetTextValue(const FText& InText, ETextCommit
 	ValueHandle->SetValue(InText);
 }
 
-void FLEventDelegateCustomization::ClearValueBuffer(TSharedPtr<IPropertyHandle> PropertyHandle)
+void FLEventDelegateCustomization::ClearValueBuffer(TSharedPtr<IPropertyHandle> InItemPropertyHandle)
 {
-	auto handle = PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, ParamBuffer))->AsArray();
+	auto handle = InItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, ParamBuffer))->AsArray();
 	uint32 NumElements = 0;
 	if (handle->GetNumElements(NumElements) == FPropertyAccess::Result::Success && NumElements > 0)
 	{
 		handle->EmptyArray();
 	}
 }
-void FLEventDelegateCustomization::ClearReferenceValue(TSharedPtr<IPropertyHandle> PropertyHandle)
+void FLEventDelegateCustomization::ClearReferenceValue(TSharedPtr<IPropertyHandle> InItemPropertyHandle)
 {
-	ClearObjectValue(PropertyHandle);
+	ClearObjectValue(InItemPropertyHandle);
 }
-void FLEventDelegateCustomization::ClearObjectValue(TSharedPtr<IPropertyHandle> PropertyHandle)
+void FLEventDelegateCustomization::ClearObjectValue(TSharedPtr<IPropertyHandle> InItemPropertyHandle)
 {
-	auto handle = PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, ReferenceObject));
+	auto handle = InItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, ReferenceObject));
 	UObject* Obj = nullptr;
 	if (handle->GetValue(Obj) == FPropertyAccess::Result::Success && Obj != nullptr)
 	{
@@ -2100,26 +2102,26 @@ void FLEventDelegateCustomization::ClearObjectValue(TSharedPtr<IPropertyHandle> 
 	}
 }
 
-void FLEventDelegateCustomization::OnParameterTypeChange(TSharedRef<IPropertyHandle> InDataContainerHandle)
+void FLEventDelegateCustomization::OnParameterTypeChange(TSharedRef<IPropertyHandle> InItemPropertyHandle)
 {
-	auto ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, BoolValue)); ValueHandle->ResetToDefault();
-	ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, FloatValue)); ValueHandle->ResetToDefault();
-	ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, DoubleValue)); ValueHandle->ResetToDefault();
-	ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, Int8Value)); ValueHandle->ResetToDefault();
-	ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, UInt8Value)); ValueHandle->ResetToDefault();
-	ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, Int16Value)); ValueHandle->ResetToDefault();
-	ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, UInt16Value)); ValueHandle->ResetToDefault();
-	ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, Int32Value)); ValueHandle->ResetToDefault();
-	ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, UInt32Value)); ValueHandle->ResetToDefault();
-	ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, Int64Value)); ValueHandle->ResetToDefault();
-	ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, UInt64Value)); ValueHandle->ResetToDefault();
-	ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, Vector2Value)); ValueHandle->ResetToDefault();
-	ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, Vector3Value)); ValueHandle->ResetToDefault();
-	ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, Vector4Value)); ValueHandle->ResetToDefault();
-	ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, QuatValue)); ValueHandle->ResetToDefault();
-	ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, ColorValue)); ValueHandle->ResetToDefault();
-	ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, LinearColorValue)); ValueHandle->ResetToDefault();
-	ValueHandle = InDataContainerHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, RotatorValue)); ValueHandle->ResetToDefault();
+	auto ValueHandle = InItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, BoolValue)); ValueHandle->ResetToDefault();
+	ValueHandle = InItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, FloatValue)); ValueHandle->ResetToDefault();
+	ValueHandle = InItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, DoubleValue)); ValueHandle->ResetToDefault();
+	ValueHandle = InItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, Int8Value)); ValueHandle->ResetToDefault();
+	ValueHandle = InItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, UInt8Value)); ValueHandle->ResetToDefault();
+	ValueHandle = InItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, Int16Value)); ValueHandle->ResetToDefault();
+	ValueHandle = InItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, UInt16Value)); ValueHandle->ResetToDefault();
+	ValueHandle = InItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, Int32Value)); ValueHandle->ResetToDefault();
+	ValueHandle = InItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, UInt32Value)); ValueHandle->ResetToDefault();
+	ValueHandle = InItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, Int64Value)); ValueHandle->ResetToDefault();
+	ValueHandle = InItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, UInt64Value)); ValueHandle->ResetToDefault();
+	ValueHandle = InItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, Vector2Value)); ValueHandle->ResetToDefault();
+	ValueHandle = InItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, Vector3Value)); ValueHandle->ResetToDefault();
+	ValueHandle = InItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, Vector4Value)); ValueHandle->ResetToDefault();
+	ValueHandle = InItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, QuatValue)); ValueHandle->ResetToDefault();
+	ValueHandle = InItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, ColorValue)); ValueHandle->ResetToDefault();
+	ValueHandle = InItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, LinearColorValue)); ValueHandle->ResetToDefault();
+	ValueHandle = InItemPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FLEventDelegateData, RotatorValue)); ValueHandle->ResetToDefault();
 }
 
 
